@@ -148,7 +148,7 @@ function getThesisId($conn, $receiver_id, $current_user_id)
 {
     $sql = "SELECT advisor_request_id FROM advisor_request 
             WHERE (
-                (advisor_id = ? AND JSON_CONTAINS(student_id, ?))
+                (advisor_id = ? AND JSON_CONTAINS(student_id, ?)) -- JSON_CONTAINS เป็นฟังก์ชันที่ใช้ตรวจสอบว่า ค่า JSON ที่กำหนดมีค่าที่ต้องการอยู่ภายในหรือไม่
                 OR (advisor_id = ? AND JSON_CONTAINS(student_id, ?))
             )
             AND is_advisor_approved = 1 
@@ -193,6 +193,7 @@ function getThesisId($conn, $receiver_id, $current_user_id)
         <div class='topic-head'>
             <h2><?php echo $receiver['advisor_first_name'] . ' ' . $receiver['advisor_last_name']; ?></h2>
             <div class="topic-head-actions">
+                <!-- ปุ่มเข้าหน้า Teams ขึ้นเฉพาะคนที่ได้รับเป็นที่ปรึกษาแล้ว -->
                 <?php if ($is_fully_approved): ?>
                     <form action="../thesis_resource/thesis_resource.php" method="POST" style="display: inline;">
                         <input type="hidden" name="thesis_id" value="<?php echo htmlspecialchars(getThesisId($conn, $receiver_id, $_SESSION['account_id'])); ?>">
@@ -203,11 +204,13 @@ function getThesisId($conn, $receiver_id, $current_user_id)
             </div>
         </div>
 
+        <!-- Live Search -->
         <div class="topic-search">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" id="search-input" placeholder="Search topic" value="" />
         </div>
 
+        <!-- หน้าแชท ก่อน-หลัง รับเป็นที่ปรึกษา -->
         <div class="topic-status">
             <?php if ($is_fully_approved): ?>
                 <button class="active" data-section="after">Post-Approval</button>

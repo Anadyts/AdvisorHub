@@ -30,7 +30,7 @@ function renderMessages($messages, $receiver_id, $total = null, $offset = 0, $ty
                     <div class='sender'>" . htmlspecialchars($message['title']) . "</div>
                     <div class='message-date'>" . $message['timestamp'] . "</div>";
 
-            // ตรวจสอบสถานะการลบ
+            // ตรวจสอบสถานะการลบ (Delete ข้อความทิ้งได้ แต่ต้องให้อีกฝ่ายยืนยันก่อนว่าลบได้)
             if ($delete_request == 0) {
                 // ยังไม่มีการร้องขอ แสดงปุ่ม Delete ปกติใน dropdown
             } elseif ($delete_from_id == $id) {
@@ -71,7 +71,7 @@ function renderMessages($messages, $receiver_id, $total = null, $offset = 0, $ty
         }
     }
 
-    // เพิ่มปุ่ม View More ถ้ามี
+    // เพิ่มปุ่ม View More ถ้ามี (โชว์เพิ่มทุก ๆ 5 ข้อความ)
     if ($total !== null && $total > ($offset + count($messages))) {
         $new_count = $offset + count($messages);
         $messages_html .= "<button class='view-more' data-type='$type' data-count='$new_count' data-total='$total' data-search='" . htmlspecialchars($search_term) . "'>View More</button>";
