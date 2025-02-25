@@ -34,16 +34,16 @@ if (isset($_POST['accept'])) {
     $advisor_req_id = $_POST['accept'];
     $id = $_SESSION['account_id'];
     // ตรวจสอบว่า advisor เป็นเจ้าของคำร้อง
-    $sql_check = "SELECT advisor_id FROM advisor_request WHERE advisor_request_id = ? AND advisor_id = ?";
+    $sql_check = "SELECT advisor_id FROM advisor_request WHERE advisor_request_id = ?";
     $stmt_check = $conn->prepare($sql_check);
-    $stmt_check->bind_param("ss", $advisor_req_id, $id);
+    $stmt_check->bind_param("s", $advisor_req_id);
     $stmt_check->execute();
     $result_check = $stmt_check->get_result();
 
     if ($result_check->num_rows > 0) {
-        $sql = "UPDATE advisor_request SET partner_accepted = 1 WHERE advisor_request_id = ? AND advisor_id = ?";
+        $sql = "UPDATE advisor_request SET partner_accepted = 1 WHERE advisor_request_id = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ss", $advisor_req_id, $id);
+        $stmt->bind_param("s", $advisor_req_id);
         $stmt->execute();
     }
     header('location: /AdvisorHub/advisor_approved/request.php');
@@ -55,16 +55,16 @@ if (isset($_POST['reject'])) {
     $advisor_req_id = $_POST['reject'];
     $id = $_SESSION['account_id'];
     // ตรวจสอบว่า advisor เป็นเจ้าของคำร้อง
-    $sql_check = "SELECT advisor_id FROM advisor_request WHERE advisor_request_id = ? AND advisor_id = ?";
+    $sql_check = "SELECT advisor_id FROM advisor_request WHERE advisor_request_id = ?";
     $stmt_check = $conn->prepare($sql_check);
-    $stmt_check->bind_param("ss", $advisor_req_id, $id);
+    $stmt_check->bind_param("s", $advisor_req_id);
     $stmt_check->execute();
     $result_check = $stmt_check->get_result();
 
     if ($result_check->num_rows > 0) {
-        $sql = "UPDATE advisor_request SET partner_accepted = 2 WHERE advisor_request_id = ? AND advisor_id = ?";
+        $sql = "UPDATE advisor_request SET partner_accepted = 2 WHERE advisor_request_id = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ss", $advisor_req_id, $id);
+        $stmt->bind_param("s", $advisor_req_id);
         $stmt->execute();
     }
     header('location: /AdvisorHub/advisor_approved/request.php');
