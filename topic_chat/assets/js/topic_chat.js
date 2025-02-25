@@ -41,7 +41,7 @@ $(document).ready(function() {
             const $afterContainer = $('.message-container[data-type="after"]');
             refreshMessages($beforeContainer, 'before');
             refreshMessages($afterContainer, 'after');
-        }, 5000); // ตรวจสอบทุก 5 วินาที
+        }, 3000); // ตรวจสอบทุก 3 วินาที
     }
 
     // ฟังก์ชันหยุด polling

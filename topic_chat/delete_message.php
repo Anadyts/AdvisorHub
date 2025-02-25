@@ -13,7 +13,7 @@ $id = $_SESSION['account_id'];
 $action = $_POST['action'];
 
 if ($action === 'request') {
-    // ส่งคำร้องขอลบ
+    // ส่งคำร้องขอลบ (สถานะ: Waiting)
     $sql = "UPDATE messages 
             SET message_delete_request = 1, message_delete_from_id = '$id', time_stamp = NOW()
             WHERE message_title = '$title' 
