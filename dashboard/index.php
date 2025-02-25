@@ -20,7 +20,12 @@ $sql = "
         IFNULL(SUM(CASE WHEN ar.is_even = 1 THEN 1 ELSE 0 END), 0) AS pair,
         IFNULL(SUM(CASE WHEN ar.is_even = 1 THEN 1 ELSE 0 END), 0) + IFNULL(SUM(CASE WHEN ar.is_even = 0 THEN 1 ELSE 0 END), 0) AS total
     FROM advisor a
-    LEFT JOIN advisor_request ar ON a.advisor_id = ar.advisor_id
+    LEFT JOIN advisor_request ar 
+        ON a.advisor_id = ar.advisor_id 
+        AND ar.is_advisor_approved = 1 
+        AND ar.is_admin_approved = 1 
+        AND ar.time_stamp BETWEEN STR_TO_DATE(CONCAT(YEAR(CURDATE()) - 1, '-11-01'), '%Y-%m-%d') 
+        AND STR_TO_DATE(CONCAT(YEAR(CURDATE()), '-10-31'), '%Y-%m-%d')
     GROUP BY a.advisor_id
 ";
 
@@ -50,6 +55,7 @@ $result = $conn->query($sql);
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
             border-radius: 12px;
             overflow: hidden;
+            margin-bottom: 3rem;
         }
 
         th,
@@ -78,7 +84,7 @@ $result = $conn->query($sql);
             color: #dc2626;
         }
 
-        h2 {
+        .topic {
             color: #1f2937;
             margin: 20px 0;
             font-weight: 700;
@@ -130,7 +136,7 @@ $result = $conn->query($sql);
 <body>
 
     <?php renderNavbar(['home', 'advisor', 'statistics', "Dashboard"]); ?>
-    <h2>รายชื่ออาจารย์ที่ปรึกษา และจำนวนที่รับเป็นอาจารย์ที่ปรึกษา</h2>
+    <h2 class="topic">รายชื่ออาจารย์ที่ปรึกษา และจำนวนที่รับเป็นอาจารย์ที่ปรึกษา</h2>
 
     <table>
         <thead>
