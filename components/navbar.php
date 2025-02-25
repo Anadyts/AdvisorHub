@@ -36,6 +36,7 @@ function renderNavbar($allowedPages)
             }elseif(isset($_SESSION['username']) && $_SESSION['role'] == 'admin'){
                 echo "<li><a href='/AdvisorHub/chat_activity'>Activity</a></li>";
                 echo "<li><a href='/AdvisorHub/dashboard/'>Dashboard</a></li>";
+                echo "<li><a href='/AdvisorHub/admin_approved/'>Request</a></li>";
             }
             
             ?>
