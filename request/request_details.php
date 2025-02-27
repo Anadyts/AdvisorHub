@@ -6,6 +6,19 @@ session_start();
 //     header("location:http://localhost/AdvisorHub/request/");
 // }
 
+// จัดการ Logout
+if (isset($_POST['logout'])) {
+    session_destroy();
+    header('location: /AdvisorHub/login');
+    exit();
+}
+
+// จัดการ Profile
+if (isset($_POST['profile'])) {
+    header('location: /AdvisorHub/profile');
+    exit();
+}
+
 // ดึงข้อมูลจาก db
 $sql = "SELECT * FROM advisor_request WHERE JSON_CONTAINS(student_id, '\"{$_SESSION["account_id"]}\"') AND is_advisor_approved != 2";
 $result = mysqli_query($conn, $sql);
@@ -17,7 +30,7 @@ if (mysqli_num_rows($result) > 0) {
 }
 
 //ไม่ให้ admin เข้าถึง
-if(isset($_SESSION['username']) && $_SESSION['role'] == 'admin'){
+if (isset($_SESSION['username']) && $_SESSION['role'] == 'admin') {
     header('location: /AdvisorHub/advisor');
 }
 
@@ -54,7 +67,7 @@ if(isset($_SESSION['username']) && $_SESSION['role'] == 'admin'){
             text-wrap">
                 สถานะการส่งคำร้อง:
                 <?php
-                if (isset($_SESSION['notify_message'])) { 
+                if (isset($_SESSION['notify_message'])) {
                     echo $_SESSION['notify_message'];
                 }
                 // เคลียร์ข้อความแจ้งเตือน
