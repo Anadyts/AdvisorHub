@@ -133,13 +133,13 @@ if (isset($_SESSION['advisor_info_id'])) {
 
             <form action="" method="post" class="nav-form">
                 <button name="advisor_request" value="<?= $advisor_info['advisor_id']; ?>">
-                    <i class="bx bx-highlight"></i>
+                    <img src="./gif/write.gif" alt="" width="70" height="70">
                 </button>
                 <button name="thesis" value="<?= $advisor_info['advisor_id']; ?>">
-                    <i class="bx bx-history"></i>
+                    <img src="./gif/history.gif" alt="" width="70" height="70">
                 </button>
                 <button name="chat" value="<?= $advisor_info['advisor_id']; ?>">
-                    <i class="bx bxs-message-dots"></i>
+                    <img src="./gif/message.gif" alt="" width="70" height="70">
                 </button>
             </form>
         </div>
