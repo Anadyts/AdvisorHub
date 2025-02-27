@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     //ไม่ให้ admin เข้าถึง
-    if(isset($_SESSION['username']) && $_SESSION['role'] == 'admin'){
+    if (isset($_SESSION['username']) && $_SESSION['role'] == 'admin') {
         header('location: /AdvisorHub/advisor');
     }
 }
@@ -98,8 +98,13 @@ if (isset($_SESSION['advisor_info_id'])) {
 </head>
 
 <body>
-
-    <?php renderNavbar(['home', 'advisor', 'inbox', 'statistics', 'Teams']); ?>
+    <?php
+    if (isset($_SESSION['username'])) {
+        renderNavbar(allowedPages: ['home', 'advisor', 'inbox', 'statistics', 'Teams']);
+    } else {
+        renderNavbar(allowedPages: ['home', 'login', 'advisor', 'statistics']);
+    }
+    ?>
 
     <?php if ($advisor_info): ?>
         <div class="container">
