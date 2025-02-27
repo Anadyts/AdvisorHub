@@ -14,8 +14,12 @@ if (isset($_POST['logout'])) {
   header('location: /AdvisorHub/login');
 }
 
+if (isset($_POST['profile'])) {
+  header('location: /AdvisorHub/profile');
+}
+
 //ไม่ให้ admin เข้าถึง
-if(isset($_SESSION['username']) && $_SESSION['role'] == 'admin'){
+if (isset($_SESSION['username']) && $_SESSION['role'] == 'admin') {
   header('location: /AdvisorHub/advisor');
 }
 
