@@ -182,7 +182,13 @@ function renderNavbar($allowedPages)
 
     .dropdown {
         width: 100px;
-        height: 80px;
+        <?php
+        if (isset($_SESSION['role']) && $_SESSION['role'] == 'admin') {
+            echo "height: 50px;";
+        } else {
+            echo "height: 80px;";
+        }
+        ?>
         background-color: rgb(255, 255, 255);
         position: absolute !important;
         top: 60%;

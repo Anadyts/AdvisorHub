@@ -195,35 +195,37 @@ $result = $conn->query($sql);
     <?php
     // Add this SQL query after your existing query and before the closing </body> tag
     $sql_students = "SELECT 
-    s.student_id,
-    s.student_first_name,
-    s.student_last_name,
-    s.student_tel,
-    s.student_email
-FROM student s
-LEFT JOIN advisor_request ar 
-    ON JSON_CONTAINS(ar.student_id, CONCAT('\"', s.student_id, '\"'))
-WHERE (
-    ar.advisor_request_id IS NULL
-    OR (
-        ar.student_id IS NOT NULL
-        AND ar.is_advisor_approved = 0
-        AND ar.is_admin_approved = 0
+        s.student_id,
+        s.student_first_name,
+        s.student_last_name,
+        s.student_tel,
+        s.student_email,
+        s.student_department
+    FROM student s
+    LEFT JOIN advisor_request ar 
+        ON JSON_CONTAINS(ar.student_id, CONCAT('\"', s.student_id, '\"'))
+    WHERE (
+        ar.advisor_request_id IS NULL
+        OR (
+            ar.student_id IS NOT NULL
+            AND ar.is_advisor_approved = 0
+            AND ar.is_admin_approved = 0
+        )
     )
-)
-AND NOT EXISTS (
-    SELECT 1 
-    FROM advisor_request ar2 
-    WHERE JSON_CONTAINS(ar2.student_id, CONCAT('\"', s.student_id, '\"'))
-    AND ar2.is_advisor_approved = 1 
-    AND ar2.is_admin_approved = 1
-)
-GROUP BY 
-    s.student_id,
-    s.student_first_name,
-    s.student_last_name,
-    s.student_tel,
-    s.student_email";
+    AND NOT EXISTS (
+        SELECT 1 
+        FROM advisor_request ar2 
+        WHERE JSON_CONTAINS(ar2.student_id, CONCAT('\"', s.student_id, '\"'))
+        AND ar2.is_advisor_approved = 1 
+        AND ar2.is_admin_approved = 1
+    )
+    GROUP BY 
+        s.student_first_name,
+        s.student_last_name,
+        s.student_tel,
+        s.student_email,
+        s.student_department
+    ";
 
     $result_students = $conn->query($sql_students);
     ?>
@@ -237,6 +239,7 @@ GROUP BY
                 <th>ชื่อ-นามสกุล</th>
                 <th>เบอร์โทรศัพท์</th>
                 <th>อีเมล</th>
+                <th>สาขา</th>
             </tr>
         </thead>
         <tbody>
@@ -250,6 +253,7 @@ GROUP BY
                         <td style='text-align: left;'>{$row['student_first_name']} {$row['student_last_name']}</td>
                         <td>{$row['student_tel']}</td>
                         <td>{$row['student_email']}</td>
+                        <td>{$row['student_department']}</td>
                     </tr>";
                     $student_index++;
                 }
