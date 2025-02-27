@@ -68,27 +68,27 @@ $advisor_row = mysqli_fetch_array($advisor_result);
   <?php renderNavbar(['home', 'advisor', 'inbox', 'statistics', 'Teams']) ?>
 
   <div class="container my-5">
+    <h1 class="head-thesis">Thesis Request Form</h1>
     <form action="advisor_request.php" method="POST">
       <!-- academic year and semester -->
       <div class="mb-3 row align-items-center">
 
         <div class="col-auto">
-          <label for="academic_year">ปีการศึกษา:</label>
-          <input type="number" class="form-control" id="academic_year" name="academic_year"
+          <input type="hidden" class="form-control" id="academic_year" name="academic_year"
             value="<?php echo date("Y") + 542 ?>" style="width: 100px;">
         </div>
 
         <div class="col-auto">
-          <label for="semester">ภาคเรียน:</label>
-          <select id="semester" name="semester" class="form-select w-auto">
-            <option value="1" selected>1</option>
-            <option value="2">2</option>
-          </select>
+          <input type="hidden" id="semester" name="semester" value="2" class="form-control">
         </div>
-
       </div>
 
-
+            <!-- อาจารย์ที่ปรึกษา -->
+      <div class="mb-3">
+        <h3 for="advisorName">Advisor: <?php echo $advisor_row['advisor_first_name']. ' ' . $advisor_row['advisor_last_name'];  ?></h3>
+        <input type="hidden" class="form-control" id="advisorName" name="advisorName"
+          value="<?php echo $advisor_row['advisor_first_name'] . ' ' . $advisor_row['advisor_last_name']; ?>" readonly>
+      </div>
 
       <!-- Dropdown -->
       <div class="mb-3 d-flex align-items-center">
@@ -101,12 +101,11 @@ $advisor_row = mysqli_fetch_array($advisor_result);
 
       <!-- ฟิลด์ทำเดี่ยว -->
       <div id="singleFields">
-        <h5>ข้อมูลนิสิต (ทำเดี่ยว)</h5>
+        <h5>ข้อมูลนิสิต</h5>
 
         <div class="row align-items-center mb-3">
           <div class="col-md-6">
-            <label for="singleStudentID" class="form-label">รหัสนิสิต:</label>
-            <input type="text" class="form-control" id="singleStudentID" name="singleStudentID"
+            <input type="hidden" class="form-control" id="singleStudentID" name="singleStudentID"
               value="<?php echo $row['student_id']; ?>" readonly>
           </div>
         </div>
@@ -114,26 +113,16 @@ $advisor_row = mysqli_fetch_array($advisor_result);
 
       <!-- ฟิลด์ทำคู่ -->
       <div id="pairFields" class="hidden">
-        <h5>ข้อมูลนิสิต (ทำคู่)</h5>
+        <h5>ข้อมูลนิสิต</h5>
         <div class="row align-items-center mb-3">
           <!-- input รหัสนิสิต -->
           <div class="col-md-6">
-            <label for="pairStudentID1" class="form-label">รหัสนิสิต[1]:</label>
-            <input type="text" class="form-control" id="pairStudentID1" name="pairStudentID1"
+            <input type="hidden" class="form-control" id="pairStudentID1" name="pairStudentID1"
               value="<?php echo $row['student_id']; ?>" readonly>
-          </div>
-          <div class="col-md-6">
-            <label for="pairStudentID2" class="form-label">รหัสนิสิต[2]:</label>
-            <input type="text" class="form-control" id="pairStudentID2" name="pairStudentID2" placeholder="กรุณากรอกรหัสนิสิต" onblur="fetchStudentData()">
+              <label for="pairStudentID2" class="form-label mt-4">รหัสนิสิตของคู่</label>
+              <input type="text" class="form-control" id="pairStudentID2" name="pairStudentID2" placeholder="กรุณากรอกรหัสนิสิตของคู่" onblur="fetchStudentData()">
           </div>
         </div>
-      </div>
-
-      <!-- อาจารย์ที่ปรึกษา -->
-      <div class="mb-3">
-        <label for="advisorName" class="form-label">อาจารย์ที่ปรึกษาวิทยานิพนธ์:</label>
-        <input type="text" class="form-control" id="advisorName" name="advisorName"
-          value="<?php echo $advisor_row['advisor_first_name'] . ' ' . $advisor_row['advisor_last_name']; ?>" readonly>
       </div>
 
       <!-- ชื่อเรื่องไทย -->

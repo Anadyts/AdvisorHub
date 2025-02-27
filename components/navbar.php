@@ -184,7 +184,7 @@ function renderNavbar($allowedPages)
         width: 100px;
         <?php
         if (isset($_SESSION['role']) && $_SESSION['role'] == 'admin') {
-            echo "height: 50px;";
+            echo "height: 40px;";
         } else {
             echo "height: 80px;";
         }
