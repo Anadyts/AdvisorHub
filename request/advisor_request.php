@@ -33,7 +33,7 @@ if (isset($_SESSION['username']) && $_SESSION['role'] == 'admin') {
     exit();
 }
 
-// Sanitize input data
+// mysqli_real_escape_string() ป้องกันการ sql injection (Sanitize input data to prevent SQL injection)
 $academic_year = (int) mysqli_real_escape_string($conn, $_POST['academic_year']);
 $semester = (int) mysqli_real_escape_string($conn, $_POST['semester']);
 $thesisType = mysqli_real_escape_string($conn, $_POST['thesisType']);
@@ -51,16 +51,17 @@ $thesisTitleThai = mysqli_real_escape_string($conn, $_POST['thesisTitleThai']);
 $thesisTitleEnglish = mysqli_real_escape_string($conn, $_POST['thesisTitleEnglish']);
 $thesisDescription = mysqli_real_escape_string($conn, $_POST['thesisDescription']);
 
-// Check for duplicate requests
+// sql หาข้อมูลว่ามีคำร้องที่ส่งไปแล้วหรือยัง (Check if a request has already been sent)
 $sql = "SELECT * FROM advisor_request WHERE JSON_CONTAINS(student_id, '\"{$_SESSION["account_id"]}\"') 
         AND is_advisor_approved != 2 AND is_admin_approved != 2 AND partner_accepted != 2";
 $result = $conn->query($sql);
 
-if ($result->num_rows > 0) {
+if ($result->num_rows > 0) { // ถ้าเจอข้อมูลคำร้องที่เคยส่งไปแล้ว จะไม่สามารถส่งคำร้องซ้ำได้ ส่ง message แจ้งเตือน
     $_SESSION["notify_message"] = "ไม่สามารถส่งคำร้องซ้ำได้";
     header("location: http://localhost/AdvisorHub/request/request_details.php");
     exit();
-} else {
+} else { // ถ้าไม่เจอข้อมูลคำร้องที่เคยส่งไปแล้ว
+    // ถ้า type เป็นเดี่ยว (If type is single)
     if ($thesisType == 'single') {
         $is_even = 0;
         $requester_id = $_SESSION['account_id'];
@@ -84,6 +85,7 @@ if ($result->num_rows > 0) {
             header("location: http://localhost/AdvisorHub/request/request_details.php");
             exit();
         }
+    // ถ้า type เป็นคู่ (If type is pair)
     } else {
         // Check for identical student IDs
         if ($pairStudentID1 === $pairStudentID2) {
