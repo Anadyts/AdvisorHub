@@ -8,7 +8,7 @@ if (isset($_POST['logout'])) {
     header('location: /AdvisorHub/login');
 }
 
-if(isset($_SESSION['username']) && $_SESSION['role'] == 'admin'){
+if (isset($_SESSION['username']) && $_SESSION['role'] == 'admin') {
     header('location: /AdvisorHub/advisor');
 }
 
@@ -19,38 +19,73 @@ if (empty($_SESSION['username'])) {
 if (isset($_POST['profile'])) {
     header('location: /AdvisorHub/profile');
 }
+
 // เก็บ user id และ role จาก session
 $current_user_id = $_SESSION['account_id'];
 $current_user_role = $_SESSION['role'];
 
+// รับค่าจากฟิลเตอร์และช่องค้นหา
+$selected_year = isset($_GET['academic_year']) ? $_GET['academic_year'] : '';
+$search_query = isset($_GET['search']) ? $_GET['search'] : '';
+
 // สร้าง query ตาม role
+$base_sql = "SELECT ar.*, 
+                a.advisor_first_name as advisor_fname, 
+                a.advisor_last_name as advisor_lname
+             FROM advisor_request ar
+             LEFT JOIN advisor a ON ar.advisor_id = a.advisor_id
+             WHERE ar.is_advisor_approved = 1 
+             AND ar.is_admin_approved = 1";
+
 if ($current_user_role === 'student') {
-    $sql = "SELECT ar.*, 
-                   a.advisor_first_name as advisor_fname, 
-                   a.advisor_last_name as advisor_lname
-            FROM advisor_request ar
-            LEFT JOIN advisor a ON ar.advisor_id = a.advisor_id
-            WHERE ar.is_advisor_approved = 1 
-            AND ar.is_admin_approved = 1
-            AND JSON_CONTAINS(ar.student_id, ?)";
+    $sql = $base_sql . " AND JSON_CONTAINS(ar.student_id, ?)";
+    if ($selected_year) {
+        $sql .= " AND ar.academic_year = ?";
+    }
+    if ($search_query) {
+        $sql .= " AND (ar.thesis_topic_thai LIKE ? OR ar.thesis_topic_eng LIKE ? OR a.advisor_first_name LIKE ? OR a.advisor_last_name LIKE ?)";
+    }
     $stmt = $conn->prepare($sql);
     $student_id_json = json_encode($current_user_id);
-    $stmt->bind_param("s", $student_id_json);
+    if ($selected_year && $search_query) {
+        $search_term = "%$search_query%";
+        $stmt->bind_param("ssssss", $student_id_json, $selected_year, $search_term, $search_term, $search_term, $search_term);
+    } elseif ($selected_year) {
+        $stmt->bind_param("ss", $student_id_json, $selected_year);
+    } elseif ($search_query) {
+        $search_term = "%$search_query%";
+        $stmt->bind_param("sssss", $student_id_json, $search_term, $search_term, $search_term, $search_term);
+    } else {
+        $stmt->bind_param("s", $student_id_json);
+    }
 } elseif ($current_user_role === 'advisor') {
-    $sql = "SELECT ar.*, 
-                   a.advisor_first_name as advisor_fname, 
-                   a.advisor_last_name as advisor_lname
-            FROM advisor_request ar
-            LEFT JOIN advisor a ON ar.advisor_id = a.advisor_id
-            WHERE ar.is_advisor_approved = 1 
-            AND ar.is_admin_approved = 1
-            AND ar.advisor_id = ?";
+    $sql = $base_sql . " AND ar.advisor_id = ?";
+    if ($selected_year) {
+        $sql .= " AND ar.academic_year = ?";
+    }
+    if ($search_query) {
+        $sql .= " AND (ar.thesis_topic_thai LIKE ? OR ar.thesis_topic_eng LIKE ? OR a.advisor_first_name LIKE ? OR a.advisor_last_name LIKE ?)";
+    }
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $current_user_id);
+    if ($selected_year && $search_query) {
+        $search_term = "%$search_query%";
+        $stmt->bind_param("ssssss", $current_user_id, $selected_year, $search_term, $search_term, $search_term, $search_term);
+    } elseif ($selected_year) {
+        $stmt->bind_param("ss", $current_user_id, $selected_year);
+    } elseif ($search_query) {
+        $search_term = "%$search_query%";
+        $stmt->bind_param("sssss", $current_user_id, $search_term, $search_term, $search_term, $search_term);
+    } else {
+        $stmt->bind_param("s", $current_user_id);
+    }
 }
 
 $stmt->execute();
 $result = $stmt->get_result();
+
+// ดึงรายการปีการศึกษาที่มีในฐานข้อมูล
+$year_sql = "SELECT DISTINCT academic_year FROM advisor_request WHERE is_advisor_approved = 1 AND is_admin_approved = 1 ORDER BY academic_year DESC";
+$year_result = $conn->query($year_sql);
 ?>
 
 <!DOCTYPE html>
@@ -118,9 +153,43 @@ $result = $stmt->get_result();
             transform: scale(1.1);
         }
 
+        .filter-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 2rem;
+        gap: 1rem;
+        flex-wrap: wrap;
+        }
+
+        .filter-container select, 
+        .filter-container input {
+            max-width: 300px;
+            border-radius: 8px;
+            border: 1px solid #ced4da;
+            padding: 0.5rem;
+        }
+
+        .filter-container button {
+            background-color: #410690;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .filter-container button:hover {
+            background-color: #350575;
+        }
+
         @media (max-width: 768px) {
             .thesis-card {
                 margin: 1rem;
+            }
+            .filter-container {
+                flex-direction: column;
+                align-items: stretch;
             }
         }
     </style>
@@ -131,6 +200,23 @@ $result = $stmt->get_result();
 
     <div class="container-fluid px-4 py-5">
         <h1 class="text-center mb-5" style="color: #410690;">CS Student Files</h1>
+
+        <!-- Filter และ Search -->
+        <div class="filter-container">
+            <form method="GET" class="d-flex justify-content-between flex-wrap gap-3">
+                <select name="academic_year" onchange="this.form.submit()">
+                    <option value="">All Years</option>
+                    <?php while ($year_row = $year_result->fetch_assoc()): ?>
+                        <option value="<?php echo $year_row['academic_year']; ?>" <?php echo $selected_year == $year_row['academic_year'] ? 'selected' : ''; ?>>
+                            <?php echo $year_row['academic_year']; ?>
+                        </option>
+                    <?php endwhile; ?>
+                </select>
+                <input type="text" name="search" placeholder="Search by name or topic..." value="<?php echo htmlspecialchars($search_query); ?>">
+                <button type="submit">Search</button>
+            </form>
+        </div>
+
         <div class="row justify-content-center">
             <?php
             if ($result->num_rows > 0) {
@@ -172,7 +258,6 @@ $result = $stmt->get_result();
                                                 <div class="section-content">
                                                     <?php echo htmlspecialchars($row['advisor_fname'] . ' ' . $row['advisor_lname']); ?>
                                                 </div>
-
                                             </div>
                                         </div>
 
