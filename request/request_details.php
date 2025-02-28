@@ -22,7 +22,7 @@ if (isset($_SESSION['username']) && $_SESSION['role'] == 'admin') {
     exit();
 }
 
-// Fetch data from database
+// ดึงข้อมูลจาก db ที่ไม่ได้ถูกปฏิเสธ (Fetch data from the database that hasn’t been rejected)
 $sql = "SELECT * FROM advisor_request WHERE JSON_CONTAINS(student_id, '\"{$_SESSION["account_id"]}\"') AND is_advisor_approved != 2";
 $result = mysqli_query($conn, $sql);
 
@@ -30,10 +30,7 @@ if (mysqli_num_rows($result) > 0) {
     $row = mysqli_fetch_array($result);
     $student_ids = json_decode($row['student_id'], true);
 } else {
-    // Instead of redirecting, show a message or handle gracefully
     $no_data_message = "ไม่พบข้อมูลคำร้องที่เกี่ยวข้อง";
-    // header('location: /AdvisorHub/advisor_approved/request.php');
-    // exit();
 }
 
 ?>
