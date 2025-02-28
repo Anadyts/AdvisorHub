@@ -201,21 +201,26 @@ $year_result = $conn->query($year_sql);
     <div class="container-fluid px-4 py-5">
         <h1 class="text-center mb-5" style="color: #410690;">CS Student Files</h1>
 
-        <!-- Filter และ Search -->
-        <div class="filter-container">
-            <form method="GET" class="d-flex justify-content-between flex-wrap gap-3">
-                <select name="academic_year" onchange="this.form.submit()">
-                    <option value="">All Years</option>
-                    <?php while ($year_row = $year_result->fetch_assoc()): ?>
-                        <option value="<?php echo $year_row['academic_year']; ?>" <?php echo $selected_year == $year_row['academic_year'] ? 'selected' : ''; ?>>
-                            <?php echo $year_row['academic_year']; ?>
-                        </option>
-                    <?php endwhile; ?>
-                </select>
-                <input type="text" name="search" placeholder="Search by name or topic..." value="<?php echo htmlspecialchars($search_query); ?>">
-                <button type="submit">Search</button>
-            </form>
-        </div>
+        <?php
+        if ($_SESSION['role'] == 'advisor') {
+        ?>
+            <div class="filter-container">
+                <form method="GET" class="d-flex justify-content-between flex-wrap gap-3">
+                    <select name="academic_year" onchange="this.form.submit()">
+                        <option value="">All Years</option>
+                        <?php while ($year_row = $year_result->fetch_assoc()): ?>
+                            <option value="<?php echo $year_row['academic_year']; ?>" <?php echo $selected_year == $year_row['academic_year'] ? 'selected' : ''; ?>>
+                                <?php echo $year_row['academic_year']; ?>
+                            </option>
+                        <?php endwhile; ?>
+                    </select>
+                    <input type="text" name="search" placeholder="Search by name or topic..." value="<?php echo htmlspecialchars($search_query); ?>">
+                    <button type="submit">Search</button>
+                </form>
+            </div>
+        <?php
+        }
+        ?>
 
         <div class="row justify-content-center">
             <?php

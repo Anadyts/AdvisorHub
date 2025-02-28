@@ -54,7 +54,7 @@ $result = mysqli_query($conn, $sql);
         .container { max-width: 900px; margin: auto; margin-top: 2rem; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgb(136, 134, 134); }
         .container h2 { text-align: center; color: #333; }
         .search-filter { display: flex; justify-content: space-between; margin-bottom: 20px; }
-        .container input, select, button { padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
+        .container .container input, .container select, .container button { padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
         .container button { background: #007bff; color: white; border: none; cursor: pointer; }
         .container button:hover { background: #0056b3; }
         .container table { width: 100%; border-collapse: collapse; background: white; }
