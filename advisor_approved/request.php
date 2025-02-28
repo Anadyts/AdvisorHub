@@ -198,6 +198,7 @@ $id = $_SESSION['account_id'];
                         default => '<span class="status status-unknown">Unknown</span>',
                     };
             ?>
+                    <h1 class="head-request">Request</h1>
                     <div class="request-card">
                         <!-- หัวข้อวิทยานิพนธ์ -->
                         <h3 class="request-title"><?php echo htmlspecialchars($row["thesis_topic_thai"]); ?></h3>
