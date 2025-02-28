@@ -169,7 +169,7 @@ body {
 }
 
 /* No Request */
-.no-request {
+.no-request-message {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -177,6 +177,10 @@ body {
     font-size: 28px;
     font-weight: bold;
     color: #bdc3c7;
+}
+
+.no-request-message h1{
+    font-size: 40px;
 }
 
 /* Form Choose (จากโค้ดเดิม) */
