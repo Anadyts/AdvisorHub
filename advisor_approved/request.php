@@ -173,50 +173,56 @@ $id = $_SESSION['account_id'];
                     $partner_accepted = $row['partner_accepted'];
                     $advisor_req_id = $row['advisor_request_id'];
                     $is_even = $row['is_even'];
+            
                     // กำหนดสถานะคำร้องของ partner
-                    if ($partner_accepted == 0) {
-                        $partner_status = '<span class="status waiting">Waiting</span>';
-                    } elseif ($partner_accepted == 1) {
-                        $partner_status = '<span class="status approved">Accepted</span>';
-                    } elseif ($partner_accepted == 2) {
-                        $partner_status = '<span class="status rejected">Rejected</span>';
-                    }
-
+                    $partner_status = match ($partner_accepted) {
+                        0 => '<span class="status status-waiting"><i class="bx bx-time-five"></i> Waiting</span>',
+                        1 => '<span class="status status-approved"><i class="bx bx-check-circle"></i> Accepted</span>',
+                        2 => '<span class="status status-rejected"><i class="bx bx-x-circle"></i> Rejected</span>',
+                        default => '<span class="status status-unknown">Unknown</span>',
+                    };
+            
                     // กำหนดสถานะคำร้องของ advisor
-                    if ($row['is_advisor_approved'] == 0) {
-                        $advisor_status = '<span class="status waiting">Waiting</span>';
-                    } elseif ($row['is_advisor_approved'] == 1) {
-                        $advisor_status = '<span class="status approved">Approved</span>';
-                    } elseif ($row['is_advisor_approved'] == 2) {
-                        $advisor_status = '<span class="status rejected">Rejected</span>';
-                    }
-
+                    $advisor_status = match ($row['is_advisor_approved']) {
+                        0 => '<span class="status status-waiting"><i class="bx bx-time-five"></i> Waiting</span>',
+                        1 => '<span class="status status-approved"><i class="bx bx-check-circle"></i> Approved</span>',
+                        2 => '<span class="status status-rejected"><i class="bx bx-x-circle"></i> Rejected</span>',
+                        default => '<span class="status status-unknown">Unknown</span>',
+                    };
+            
                     // กำหนดสถานะคำร้องของ admin
-                    if ($row['is_admin_approved'] == 0) {
-                        $admin_status = '<span class="status waiting">Waiting</span>';
-                    } elseif ($row['is_admin_approved'] == 1) {
-                        $admin_status = '<span class="status approved">Approved</span>';
-                    } elseif ($row['is_admin_approved'] == 2) {
-                        $admin_status = '<span class="status rejected">Rejected</span>';
-                    }
+                    $admin_status = match ($row['is_admin_approved']) {
+                        0 => '<span class="status status-waiting"><i class="bx bx-time-five"></i> Waiting</span>',
+                        1 => '<span class="status status-approved"><i class="bx bx-check-circle"></i> Approved</span>',
+                        2 => '<span class="status status-rejected"><i class="bx bx-x-circle"></i> Rejected</span>',
+                        default => '<span class="status status-unknown">Unknown</span>',
+                    };
             ?>
                     <div class="request-card">
-                        <!-- แสดงหัวข้อวิทยานิพนธ์ -->
-                        <h3 class="request-title">หัวข้อวิทยานิพนธ์: <?php echo htmlspecialchars($row["thesis_topic_thai"]); ?></h3>
+                        <!-- หัวข้อวิทยานิพนธ์ -->
+                        <h3 class="request-title"><?php echo htmlspecialchars($row["thesis_topic_thai"]); ?></h3>
                         <div class="request-info">
-                            <?php
-                            // แสดงสถานะ partner ถ้าเป็นกลุ่มคู่
-                            if ($is_even == 1) { ?>
-                                <p><strong>Partner Accept Status:</strong> <?php echo $partner_status; ?></p>
-                            <?php } ?>
-                            <!-- แสดงสถานะของ advisor และ admin -->
-                            <p><strong>Advisor Approval Status:</strong> <?php echo $advisor_status; ?></p>
-                            <p><strong>Admin Approval Status:</strong> <?php echo $admin_status; ?></p>
+                            <div class="status-container">
+                                <?php if ($is_even == 1): ?>
+                                    <div class="status-item">
+                                        <span class="status-label">Partner Accept Status</span>
+                                        <div class="status-show"><?php echo $partner_status; ?></div>
+                                    </div>
+                                <?php endif; ?>
+                                <div class="status-item">
+                                    <span class="status-label">Advisor Approval Status</span>
+                                    <div class="status-show"><?php echo $advisor_status; ?></div>
+                                </div>
+                                <div class="status-item">
+                                    <span class="status-label">Admin Approval Status</span>
+                                    <div class="status-show"><?php echo $admin_status; ?></div>
+                                </div>
+                            </div>
                         </div>
-                        <!-- แสดง timestamp -->
                         <div class="request-footer">
-                            <span class="timestamp"><?php echo $row["time_stamp"]; ?></span>
+                            <span class="timestamp"><?php echo $row['time_stamp']; ?></span>
                         </div>
+        
                         <!-- แสดงปุ่มยอมรับ/ปฏิเสธสำหรับ partner -->
                         <?php if ($requester_id != $id && $partner_accepted == 0) {
                             echo

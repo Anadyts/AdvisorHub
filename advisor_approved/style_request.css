@@ -1,13 +1,18 @@
+/* รีเซ็ตและตั้งค่าพื้นฐาน */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
     background-color: #f5f5f5;
 }
+
 .container {
-    width: 80%;
+    width: 90%;
+    max-width: 800px;
     margin: 20px auto;
 }
+
+/* Card Styles (จากโค้ดเดิม) */
 .card {
     background: white;
     border-radius: 8px;
@@ -15,27 +20,33 @@ body {
     padding: 20px;
     margin-bottom: 20px;
 }
+
 .card-title {
     color: #007bff;
     font-size: 1.2em;
     margin-bottom: 5px;
 }
+
 .card-subtitle {
     color: #666;
     font-size: 1em;
     margin-bottom: 15px;
 }
+
 .list-group {
     list-style: none;
     padding: 0;
 }
+
 .list-group-item {
     padding: 8px 0;
     border-bottom: 1px solid #ddd;
 }
+
 .list-group-item:last-child {
     border-bottom: none;
 }
+
 .btn-orange {
     display: inline-block;
     background-color: #ff6600;
@@ -47,133 +58,139 @@ body {
     cursor: pointer;
     font-size: 13px;
 }
+
 .btn-orange:hover {
     background-color: #e65c00;
-}
-.timestamp {
-    margin-left: 15px;
-    font-size: 0.9em;
-    color: #777;
-}
-
-.no-request{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 80vh;
-    font-weight: bolder;
-    font-size: 30px;
-}
-
-
-.container {
-    width: 90%;
-    max-width: 800px;
-    margin: 0 auto;
-    margin-top: 20px;
 }
 
 /* Request Card Styles */
 .request-card {
-    background-color: #fff;
-    border-radius: 8px;
+    background: #fff;
+    border-radius: 12px;
     padding: 20px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .request-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
 }
 
 .request-title {
-    font-size: 22px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 15px;
-    border-bottom: 2px solid #efefef;
+    font-size: 24px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0 0 15px;
     padding-bottom: 10px;
+    border-bottom: 2px solid #ecf0f1;
 }
 
+/* Request Info */
 .request-info {
-    font-size: 16px;
-    line-height: 1.5;
-    margin-top: 10px;
-}
-
-.request-footer {
     display: flex;
-    justify-content: end;
-    margin-top: 20px;
-    font-size: 14px;
-    color: #888;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
 }
 
-.timestamp {
-    display: inline-block;
-    font-style: italic;
+.status-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.status-item {
+    display: flex;
+    justify-content: space-between; /* label ชิดซ้าย, status ชิดขวา */
+    align-items: center;
+    width: 100%; /* ให้กว้างเต็ม */
+}
+
+.status-label {
+    font-weight: 600;
+    color: #34495e;
+    font-size: 16px;
 }
 
 /* Status Styles */
 .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
     font-weight: 500;
-    padding: 5px 10px;
-    border-radius: 5px;
-    display: inline-block;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
 }
 
-.status.waiting {
-    background-color: #17a2b8;
+.status-waiting {
+    background-color: #3498db;
+    color: #fff;
+    box-shadow: 0 2px 5px rgba(52, 152, 219, 0.3);
+}
+
+.status-approved {
+    background-color: #2ecc71;
+    color: #fff;
+    box-shadow: 0 2px 5px rgba(46, 204, 113, 0.3);
+}
+
+.status-rejected {
+    background-color: #e74c3c;
+    color: #fff;
+    box-shadow: 0 2px 5px rgba(231, 76, 60, 0.3);
+}
+
+.status-unknown {
+    background-color: #95a5a6;
     color: #fff;
 }
 
-.status.approved {
-    background-color: #28a745;
-    color: #fff;
+.status:hover {
+    transform: scale(1.05);
+    filter: brightness(1.1);
 }
 
-.status.rejected {
-    background-color: #dc3545;
-    color: #fff;
+/* Footer */
+.request-footer {
+    margin-top: 15px;
+    text-align: right;
 }
 
-/* No Request Message */
-.no-request-message {
-    text-align: center;
-    font-size: 18px;
-    color: #666;
+.timestamp {
+    font-size: 13px;
+    color: #7f8c8d;
     font-style: italic;
-    margin-top: 20px;
 }
 
-/* Mobile Responsiveness */
-@media (max-width: 600px) {
-    .request-title {
-        font-size: 20px;
-    }
-
-    .request-info {
-        font-size: 14px;
-    }
-
-    .request-card {
-        padding: 15px;
-    }
+/* No Request */
+.no-request {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    font-size: 28px;
+    font-weight: bold;
+    color: #bdc3c7;
 }
 
-.form-choose{
+/* Form Choose (จากโค้ดเดิม) */
+.form-choose {
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-.wrapChoose{
+.wrapChoose {
     margin: 3px;
 }
 
-.wrapChoose button{
+.wrapChoose button {
     width: 200px;
     height: 30px;
     border-radius: 5px;
@@ -184,42 +201,70 @@ body {
     box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.301);
 }
 
-.wrapChoose button:hover{
+.wrapChoose button:hover {
     box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.301);
     cursor: pointer;
 }
 
-.reject{
+.reject {
     background-color: #dc3545;
 }
 
-.reject:hover{
+.reject:hover {
     background-color: #d5192c;
 }
 
-.accept{
+.accept {
     background-color: #28a745;
 }
 
-.accept:hover{
+.accept:hover {
     background-color: #0f922d;
 }
 
-.status-partner{
+.status-partner {
     display: flex;
     justify-content: center;
 }
 
-.accept-text{
+.accept-text {
     color: #28a745;
 }
 
-.reject-text{
-    color:red
+.reject-text {
+    color: red;
 }
 
-.wrap-foot{
+.wrap-foot {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .request-card {
+        padding: 15px;
+    }
+
+    .request-title {
+        font-size: 20px;
+    }
+
+    .status-label {
+        font-size: 14px;
+    }
+
+    .status {
+        font-size: 12px;
+        padding: 5px 10px;
+    }
+
+    .container {
+        width: 95%;
+    }
+
+    .wrapChoose button {
+        width: 150px;
+    }
 }
