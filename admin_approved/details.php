@@ -20,8 +20,9 @@ if (empty($_SESSION['username'])) {
 }
 
 if (isset($_POST['accept'])) {
+    $admin_id = $_SESSION['account_id']; 
     $advisor_req_id = $_POST['accept'];
-    $sql = "UPDATE advisor_request SET is_admin_approved = 1 WHERE advisor_request_id = ?";
+    $sql = "UPDATE advisor_request SET is_admin_approved = 1, admin_approved_id = '$admin_id' WHERE advisor_request_id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $advisor_req_id);
     $stmt->execute();
