@@ -128,7 +128,7 @@ if(isset($_SESSION['username']) && $_SESSION['role'] == 'admin'){
 
         echo "
                 <div class='chat-container'>
-                    <div class='chat-header'>
+                    <div class='chat-header' id='chat-header'>
                         <h2>$first_name $last_name</h2>
                     </div>
                     <div class='chat-box'>
@@ -239,7 +239,7 @@ if(isset($_SESSION['username']) && $_SESSION['role'] == 'admin'){
                         </div>
                     </div>
                     <form action='' method='post' class='form-send' enctype='multipart/form-data'>
-                        <div class='chat-input'>
+                        <div class='chat-input' id='chat-input'>
                             <input type='text' class='input-message' name='message' placeholder='Type a message...' />
                             <div class='custom-file-upload'>
                                 <input type='file' name='upload-file' id='file-input'>
