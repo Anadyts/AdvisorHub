@@ -79,7 +79,7 @@ try {
         echo json_encode(['success' => true]);
     } else {
         // ส่งข้อมูลดีบักกลับไปด้วย
-        throw new Exception("OH sorry,you don't have permission to delete this file.");
+        throw new Exception("Oh, sorry, you don't have permission to delete this file because you are not the owner of the file.");
     }
 
 } catch (Exception $e) {
