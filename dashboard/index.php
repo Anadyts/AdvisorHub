@@ -135,7 +135,15 @@ $result = $conn->query($sql);
 
 <body>
 
-    <?php renderNavbar(['home', 'advisor', 'statistics', "Dashboard"]); ?>
+    <?php 
+        if(empty($_SESSION['account_id'])){
+            renderNavbar(['home', 'login','advisor', 'statistics', "Dashboard"]);
+        } elseif(isset($_SESSION['account_id']) && $_SESSION['role'] == 'student' || $_SESSION['role'] == 'advisor'){
+            renderNavbar(['home', 'advisor', 'inbox', 'statistics', 'Teams']);
+        } elseif(isset($_SESSION['account_id']) && $_SESSION['role'] == 'admin'){
+            renderNavbar(allowedPages: ['home', 'advisor', 'statistics']);
+        }
+    ?>
     <h2 class="topic">รายชื่ออาจารย์ที่ปรึกษา และจำนวนที่รับเป็นอาจารย์ที่ปรึกษา</h2>
 
     <table>
@@ -237,7 +245,11 @@ $result = $conn->query($sql);
                 <th>ลำดับ</th>
                 <th>รหัสนิสิต</th>
                 <th>ชื่อ-นามสกุล</th>
-                <th>เบอร์โทรศัพท์</th>
+                <?php 
+                    if(isset($_SESSION['role']) && $_SESSION['role'] == 'admin'){
+                        echo "<th>เบอร์โทรศัพท์</th>";
+                }?>
+                
                 <th>อีเมล</th>
                 <th>สาขา</th>
             </tr>
@@ -251,7 +263,14 @@ $result = $conn->query($sql);
                         <td>{$student_index}</td>
                         <td>{$row['student_id']}</td>
                         <td style='text-align: left;'>{$row['student_first_name']} {$row['student_last_name']}</td>
-                        <td>{$row['student_tel']}</td>
+                        ";
+                    
+                        if(isset($_SESSION['role']) && $_SESSION['role'] == 'admin'){
+                            echo "<td>{$row['student_tel']}</td>";
+                        }
+                    
+                    echo"
+                        
                         <td>{$row['student_email']}</td>
                         <td>{$row['student_department']}</td>
                     </tr>";
