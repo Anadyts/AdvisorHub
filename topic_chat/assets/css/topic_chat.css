@@ -334,33 +334,6 @@ body {
     display: block;
 }
 
-/* สไตล์สำหรับปุ่ม View More */
-.view-more {
-    display: block;
-    margin: 20px auto 0;
-    padding: 10px 24px;
-    border: none;
-    background: #a463ff; /* ใช้สีหลักที่กลมกลืนกับ theme */
-    color: white;
-    font-size: 14px;
-    font-weight: 600;
-    border-radius: 20px; /* ขอบมนแบบเดียวกับปุ่มสถานะ */
-    cursor: pointer;
-    transition: background 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* เงาเล็กน้อยเพื่อให้เด่นขึ้น */
-}
-
-.view-more:hover {
-    background: #7b68ee; /* สีเข้มขึ้นเมื่อ hover */
-    transform: scale(1.02); /* ขยายเล็กน้อย */
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15); /* เงาชัดขึ้น */
-}
-
-.view-more:active {
-    transform: scale(0.98); /* หดเล็กน้อยเมื่อคลิก */
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* เงาลดลง */
-}
-
 .topic-head-actions {
     display: flex;
     gap: 16px;
@@ -379,6 +352,57 @@ body {
 
 .thesis-btn:hover {
     color: #7b68ee;
+}
+
+.pagination {
+    margin: 20px 0;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+}
+
+.pagination a {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #333;
+    background-color: white;
+    cursor: pointer;
+}
+
+.pagination a.active {
+    background-color: #fe7801;
+    color: white;
+    border-color: #fe7801;
+}
+
+.pagination a.disabled {
+    color: #ccc;
+    pointer-events: none;
+    background-color: #f5f5f5;
+}
+
+.pagination-arrow {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.results-info {
+    margin: 20px 0;
+    text-align: center;
+    color: #333;
+    font-size: 14px;
+}
+
+.results-per-page {
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-left: 10px;
+    font-size: 14px;
 }
 
 /* Responsive Design */
