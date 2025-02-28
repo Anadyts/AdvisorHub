@@ -365,7 +365,7 @@ $files = $files_result->fetch_all(MYSQLI_ASSOC);
             </div>
         <?php endif; ?>
 
-      <!-- File List -->
+        <!-- File List -->
         <div class="thesis-card">
             <div class="card-body p-5">
                 <div class="mb-4">
@@ -605,31 +605,82 @@ $files = $files_result->fetch_all(MYSQLI_ASSOC);
                 </div>
 
                 <?php
-                $titles_sql = "SELECT DISTINCT message_title FROM messages WHERE (sender_id = ? OR receiver_id = ?)";
-                $stmt = $conn->prepare($titles_sql);
-                $stmt->bind_param("ii", $_SESSION['account_id'], $_SESSION['account_id']);
+                // Prepare student IDs and advisor ID
+                $student_ids = json_decode($thesis['student_id'], true);
+                $advisor_id = $thesis['advisor_id'];
+                $current_user_id = $_SESSION['account_id'];
+                $current_user_role = $_SESSION['role'];
+
+                // Define titles SQL based on role
+                if ($current_user_role === 'student') {
+                    $titles_sql = "SELECT DISTINCT message_title 
+                                    FROM messages 
+                                    WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) 
+                                    AND message_file_name IS NOT NULL 
+                                    GROUP BY message_title 
+                                    ORDER BY MAX(time_stamp) DESC";
+                    $stmt = $conn->prepare($titles_sql);
+                    $stmt->bind_param("iiii", $current_user_id, $advisor_id, $advisor_id, $current_user_id);
+                } else if ($current_user_role === 'advisor') {
+                    $placeholders = implode(',', array_fill(0, count($student_ids), '?'));
+                    $titles_sql = "SELECT DISTINCT message_title 
+                                    FROM messages 
+                                    WHERE ((sender_id = ? AND receiver_id IN ($placeholders)) 
+                                        OR (sender_id IN ($placeholders) AND receiver_id = ?)) 
+                                    AND message_file_name IS NOT NULL 
+                                    GROUP BY message_title 
+                                    ORDER BY MAX(time_stamp) DESC";
+                    $stmt = $conn->prepare($titles_sql);
+                    $params = array_merge([$current_user_id], $student_ids, $student_ids, [$current_user_id]);
+                    $types = str_repeat('i', count($params));
+                    $stmt->bind_param($types, ...$params);
+                }
+
                 $stmt->execute();
                 $titles_result = $stmt->get_result();
                 $titles = $titles_result->fetch_all(MYSQLI_ASSOC);
                 ?>
 
-                <!-- Accordion for Titles -->
                 <div class="accordion" id="chatFilesAccordion">
                     <?php foreach ($titles as $index => $title): ?>
                         <?php
-                        $message_files_sql = "SELECT messages.*, account.role,
-                                    CASE 
-                                        WHEN account.role = 'student' THEN (SELECT student_first_name FROM student WHERE student_id = messages.sender_id)
-                                        WHEN account.role = 'advisor' THEN (SELECT advisor_first_name FROM advisor WHERE advisor_id = messages.sender_id)
-                                        ELSE messages.sender_id
-                                    END AS uploader_name
-                                    FROM messages
-                                    LEFT JOIN account ON messages.sender_id = account.account_id
-                                    WHERE (messages.sender_id = ? OR messages.receiver_id = ?) AND messages.message_file_name IS NOT NULL
-                                        AND messages.message_title = ?
-                                    ORDER BY messages.time_stamp DESC";
-                        $stmt = $conn->prepare($message_files_sql);
-                        $stmt->bind_param("iis", $_SESSION['account_id'], $_SESSION['account_id'], $title['message_title']);
+                        if ($current_user_role === 'student') {
+                            $message_files_sql = "SELECT messages.*, account.role,
+                                CASE 
+                                    WHEN account.role = 'student' THEN (SELECT student_first_name FROM student WHERE student_id = messages.sender_id)
+                                    WHEN account.role = 'advisor' THEN (SELECT advisor_first_name FROM advisor WHERE advisor_id = messages.sender_id)
+                                    ELSE messages.sender_id
+                                END AS uploader_name
+                                FROM messages
+                                LEFT JOIN account ON messages.sender_id = account.account_id
+                                WHERE ((messages.sender_id = ? AND messages.receiver_id = ?) 
+                                    OR (messages.sender_id = ? AND messages.receiver_id = ?)) 
+                                AND messages.message_file_name IS NOT NULL
+                                AND messages.message_title = ?
+                                ORDER BY messages.time_stamp DESC";
+                            $stmt = $conn->prepare($message_files_sql);
+                            $stmt->bind_param("iiiis", $current_user_id, $advisor_id, $advisor_id, $current_user_id, $title['message_title']);
+                        } else if ($current_user_role === 'advisor') {
+                            $placeholders = implode(',', array_fill(0, count($student_ids), '?'));
+                            $message_files_sql = "SELECT messages.*, account.role,
+                                CASE 
+                                    WHEN account.role = 'student' THEN (SELECT student_first_name FROM student WHERE student_id = messages.sender_id)
+                                    WHEN account.role = 'advisor' THEN (SELECT advisor_first_name FROM advisor WHERE advisor_id = messages.sender_id)
+                                    ELSE messages.sender_id
+                                END AS uploader_name
+                                FROM messages
+                                LEFT JOIN account ON messages.sender_id = account.account_id
+                                WHERE ((messages.sender_id = ? AND messages.receiver_id IN ($placeholders)) 
+                                    OR (messages.sender_id IN ($placeholders) AND messages.receiver_id = ?)) 
+                                AND messages.message_file_name IS NOT NULL
+                                AND messages.message_title = ?
+                                ORDER BY messages.time_stamp DESC";
+                            $stmt = $conn->prepare($message_files_sql);
+                            $params = array_merge([$current_user_id], $student_ids, $student_ids, [$current_user_id, $title['message_title']]);
+                            $types = str_repeat('i', count($student_ids) * 2 + 2) . 's';
+                            $stmt->bind_param($types, ...$params);
+                        }
+
                         $stmt->execute();
                         $messages_files_result = $stmt->get_result();
                         $messages_files = $messages_files_result->fetch_all(MYSQLI_ASSOC);
@@ -691,7 +742,7 @@ $files = $files_result->fetch_all(MYSQLI_ASSOC);
                     <?php endforeach; ?>
                 </div>
             </div>
-        </div>                                
+        </div>
 
         <!-- Back Button -->
         <div class="mt-4">
