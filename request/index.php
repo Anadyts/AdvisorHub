@@ -83,7 +83,7 @@ $advisor_row = mysqli_fetch_array($advisor_result);
         </div>
       </div>
 
-            <!-- อาจารย์ที่ปรึกษา -->
+      <!-- อาจารย์ที่ปรึกษา -->
       <div class="mb-3">
         <h3 for="advisorName">Advisor: <?php echo $advisor_row['advisor_first_name']. ' ' . $advisor_row['advisor_last_name'];  ?></h3>
         <input type="hidden" class="form-control" id="advisorName" name="advisorName"
@@ -155,6 +155,8 @@ $advisor_row = mysqli_fetch_array($advisor_result);
   </div>
 
   <script>
+
+    // ฟังก์ชันสำหรับเปิดปิดฟิลด์ทำเดี่ยวทำคู่
     function toggleFields() {
       const thesisType = document.getElementById('thesisType').value;
       const singleFields = document.getElementById('singleFields');

@@ -19,7 +19,7 @@ if (isset($_POST['profile'])) {
     exit();
 }
 
-// ดึงข้อมูลจาก db
+// ดึงข้อมูลจาก db ที่ไม่ได้ถูกปฏิเสธ
 $sql = "SELECT * FROM advisor_request WHERE JSON_CONTAINS(student_id, '\"{$_SESSION["account_id"]}\"') AND is_advisor_approved != 2";
 $result = mysqli_query($conn, $sql);
 if (mysqli_num_rows($result) > 0) {
