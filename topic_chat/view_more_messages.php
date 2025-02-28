@@ -71,7 +71,7 @@ if (isset($_POST['type']) && isset($_POST['offset']) && isset($_POST['receiver_i
                     <div class='message-date'>" . $message['timestamp'] . "</div>
                 </div>
                 <div class='message-actions'>
-                    <form action='../chat/index.php' method='post' class='form-chat'>
+                    <form action='../chat/index.php#chat-input' method='post' class='form-chat'>
                         <input type='hidden' name='title' value='" . htmlspecialchars($message['title']) . "'>
                         <button name='chat' class='menu-button' value='$receiver_id'><i class='bx bxs-message-dots'></i></button>";
             if ($message['unread']) {
