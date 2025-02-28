@@ -1,4 +1,5 @@
 <?php
+// ฟังก์ชันสำหรับแสดงข้อความ
 function renderMessages($messages, $receiver_id, $total = null, $offset = 0, $type = null, $search_term = '', $conn = null, $id = null)
 {
     $messages_html = '';
@@ -6,7 +7,7 @@ function renderMessages($messages, $receiver_id, $total = null, $offset = 0, $ty
         $messages_html = "<p>No messages found.</p>";
     } else {
         foreach ($messages as $message) {
-            // ดึงสถานะการร้องขอลบสำหรับข้อความนี้ ถ้า $conn และ $id มีค่า
+            // ดึงสถานะการร้องขอลบ
             $delete_request = 0;
             $delete_from_id = null;
             if ($conn && $id) {
@@ -30,17 +31,17 @@ function renderMessages($messages, $receiver_id, $total = null, $offset = 0, $ty
                     <div class='sender'>" . htmlspecialchars($message['title']) . "</div>
                     <div class='message-date'>" . $message['timestamp'] . "</div>";
 
-            // ตรวจสอบสถานะการลบ (Delete ข้อความทิ้งได้ แต่ต้องให้อีกฝ่ายยืนยันก่อนว่าลบได้)
+            // ตรวจสอบสถานะการลบ
             if ($delete_request == 0) {
-                // ยังไม่มีการร้องขอ แสดงปุ่ม Delete ปกติใน dropdown
+                // ยังไม่มีการร้องขอ
             } elseif ($delete_from_id == $id) {
-                // ผู้ใช้เป็นคนร้องขอ แสดงสถานะ Waiting เท่านั้น
+                // ผู้ใช้ร้องขอแล้ว รอการยืนยัน
                 $messages_html .= "
                     <div class='delete-status'>
                         <span>Delete Status: <span class='status-text'>Waiting</span></span>
                     </div>";
             } else {
-                // ผู้ใช้ถูกขอให้ยืนยัน แสดงปุ่ม Approve/Reject
+                // ถูกขอให้ยืนยันการลบ
                 $messages_html .= "
                     <div class='message-options'>
                         <span class='confirm-text'>Do you want to confirm the deletion?</span>
@@ -69,12 +70,6 @@ function renderMessages($messages, $receiver_id, $total = null, $offset = 0, $ty
                 </div>
             </div>";
         }
-    }
-
-    // เพิ่มปุ่ม View More ถ้ามี (โชว์เพิ่มทุก ๆ 5 ข้อความ)
-    if ($total !== null && $total > ($offset + count($messages))) {
-        $new_count = $offset + count($messages);
-        $messages_html .= "<button class='view-more' data-type='$type' data-count='$new_count' data-total='$total' data-search='" . htmlspecialchars($search_term) . "'>View More</button>";
     }
 
     return $messages_html;
