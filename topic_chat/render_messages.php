@@ -52,7 +52,7 @@ function renderMessages($messages, $receiver_id, $total = null, $offset = 0, $ty
             $messages_html .= "
                 </div>
                 <div class='message-actions'>
-                    <form action='../chat/index.php' method='post' class='form-chat'>
+                    <form action='../chat/index.php#chat-input' method='post' class='form-chat'>
                         <input type='hidden' name='title' value='" . htmlspecialchars($message['title']) . "'>
                         <button name='chat' class='menu-button' value='$receiver_id'><i class='bx bxs-message-dots'></i></button>";
             if ($message['unread']) {

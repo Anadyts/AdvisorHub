@@ -248,10 +248,9 @@ $id = $_SESSION['account_id'];
             else: ?>
                 <!-- แสดงข้อความเมื่อไม่มีคำร้อง -->
                 <div class="no-request-message">
-                    <p>คุณยังไม่มีคำร้อง</p>
+                    <h1>คุณยังไม่มีคำร้อง</h1>
                 </div>
             <?php endif; ?>
-
         <?php
             $stmt->close();
             $conn->close();

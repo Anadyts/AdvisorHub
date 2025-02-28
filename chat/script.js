@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ส่งข้อความเมื่อกดปุ่มส่ง
     form.addEventListener('submit', (e) => {
-
         const message = messageInput.value;
         const currentScrollPosition = chatBox.scrollTop; // บันทึกตำแหน่ง scroll ปัจจุบัน
 
