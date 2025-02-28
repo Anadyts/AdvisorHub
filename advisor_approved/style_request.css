@@ -268,3 +268,8 @@ body {
         width: 150px;
     }
 }
+
+.head-request{
+    color: gray;
+    text-align: center;
+}
