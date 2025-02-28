@@ -39,6 +39,7 @@ $result = $conn->query($sql);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>รายชื่ออาจารย์ที่ปรึกษา</title>
+    <link rel="icon" href="../Logo.png">
     <style>
         body {
             font-family: 'Prompt', 'Segoe UI', Arial, sans-serif;

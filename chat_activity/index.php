@@ -7,7 +7,7 @@ if (isset($_SESSION['username']) && $_SESSION['role'] != 'admin' || empty($_SESS
     exit();
 }
 
-if(isset($_POST['logout'])){
+if (isset($_POST['logout'])) {
     session_destroy();
     header('location: /AdvisorHub/login');
 }
@@ -44,29 +44,95 @@ $result = mysqli_query($conn, $sql);
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Chat Management</title>
     <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" href="../Logo.png">
     <style>
-        body { font-family: Arial, sans-serif; background-color: rgb(255, 255, 255); margin: 0; }
-        .container { max-width: 900px; margin: auto; margin-top: 2rem; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgb(136, 134, 134); }
-        .container h2 { text-align: center; color: #333; }
-        .search-filter { display: flex; justify-content: space-between; margin-bottom: 20px; }
-        .container input, select, button { padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
-        .container button { background: #007bff; color: white; border: none; cursor: pointer; }
-        .container button:hover { background: #0056b3; }
-        .container table { width: 100%; border-collapse: collapse; background: white; }
-        .container th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
-        .container th { background: #007bff; color: white; }
-        .container tr:nth-child(even) { background: #f9f9f9; }
-        .container a { text-decoration: none; color: #007bff; }
-        .container a:hover { text-decoration: underline; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: rgb(255, 255, 255);
+            margin: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            margin-top: 2rem;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgb(136, 134, 134);
+        }
+
+        .container h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        .search-filter {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .container input,
+        select,
+        button {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .container button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .container button:hover {
+            background: #0056b3;
+        }
+
+        .container table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .container th,
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .container th {
+            background: #007bff;
+            color: white;
+        }
+
+        .container tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .container a {
+            text-decoration: none;
+            color: #007bff;
+        }
+
+        .container a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
+
 <body>
-    <?php 
+    <?php
     if (isset($_SESSION['username']) && $_SESSION['role'] != 'admin') {
         renderNavbar(allowedPages: ['home', 'advisor', 'inbox', 'statistics', 'Teams']);
     } elseif (isset($_SESSION['username']) && $_SESSION['role'] == 'admin') {
@@ -168,7 +234,10 @@ $result = mysqli_query($conn, $sql);
                 if (checkbox.checked) {
                     const studentId = checkbox.getAttribute('data-student-id');
                     const advisorId = checkbox.getAttribute('data-advisor-id');
-                    selectedPairs.push({ student_id: studentId, advisor_id: advisorId });
+                    selectedPairs.push({
+                        student_id: studentId,
+                        advisor_id: advisorId
+                    });
                 }
             }
 
@@ -196,4 +265,5 @@ $result = mysqli_query($conn, $sql);
         window.onload = sortTable;
     </script>
 </body>
+
 </html>

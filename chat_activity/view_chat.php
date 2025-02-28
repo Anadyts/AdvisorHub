@@ -12,7 +12,7 @@ if (!isset($_GET['student_id']) || !isset($_GET['advisor_id'])) {
     exit();
 }
 
-if(isset($_POST['logout'])){
+if (isset($_POST['logout'])) {
     session_destroy();
     header('location: /AdvisorHub/login');
 }
@@ -29,7 +29,7 @@ $sql = "
     WHERE 
         (m.sender_id = ? AND m.receiver_id = ?) OR (m.sender_id = ? AND m.receiver_id = ?)
     ORDER BY 
-        m.message_title ASC
+        m.message_title DESC
 ";
 
 $stmt = $conn->prepare($sql);
@@ -40,26 +40,81 @@ $result = $stmt->get_result();
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>View Chat Titles</title>
     <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" href="../Logo.png">
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; }
-        .container { max-width: 900px; margin: 2rem auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
-        h1 { text-align: center; color: #333; }
-        .title-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; background: #f9f9f9; }
-        .title-item span { font-weight: bold; }
-        .title-item button { padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        .title-item button:hover { background: #0056b3; }
-        .back-btn { display: inline-block; margin-bottom: 20px; padding: 10px 15px; background: #ccc; color: #333; text-decoration: none; border-radius: 5px; }
-        .back-btn:hover { background: #bbb; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .title-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+
+        .title-item span {
+            font-weight: bold;
+        }
+
+        .title-item button {
+            padding: 5px 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .title-item button:hover {
+            background: #0056b3;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 15px;
+            background: #ccc;
+            color: #333;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        .back-btn:hover {
+            background: #bbb;
+        }
     </style>
 </head>
+
 <body>
-    <?php 
+    <?php
     if (isset($_SESSION['username']) && $_SESSION['role'] != 'admin') {
         renderNavbar(allowedPages: ['home', 'advisor', 'inbox', 'statistics', 'Teams']);
     } elseif (isset($_SESSION['username']) && $_SESSION['role'] == 'admin') {
@@ -89,6 +144,7 @@ $result = $stmt->get_result();
         ?>
     </div>
 </body>
+
 </html>
 
 <?php
