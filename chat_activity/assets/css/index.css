@@ -35,7 +35,6 @@ body {
     border: 1px solid #ccc;
     font-size: 14px;
     transition: border-color 0.3s ease;
-    cursor: pointer;
 }
 
 .container input:focus,
