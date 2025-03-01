@@ -12,7 +12,7 @@ if (empty($_SESSION['username'])) {
 }
 
 //ไม่ให้ admin เข้าถึง
-if(isset($_SESSION['username']) && $_SESSION['role'] == 'admin'){
+if (isset($_SESSION['username']) && $_SESSION['role'] == 'admin') {
     header('location: /AdvisorHub/advisor');
 }
 
@@ -244,7 +244,7 @@ if (isset($_POST['chat'])) {
     <!-- Ajax -->
     <script type="text/javascript">
         $(document).ready(function() {
-            let start = moment().subtract(29, 'days');
+            let start = moment('2000-01-01');
             let end = moment();
             let viewMode = 'list';
             let searchQuery = "";
@@ -283,6 +283,8 @@ if (isset($_POST['chat'])) {
                     'Last 30 Days': [moment().subtract(29, 'days'), moment()],
                     'This Month': [moment().startOf('month'), moment().endOf('month')],
                     'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+                    'This Year': [moment().startOf('year'), moment().endOf('year')],
+                    'Last Year': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year')],
                     'All Time': [moment('2000-01-01'), moment()]
                 }
             }, function(newStart, newEnd) {
