@@ -11,12 +11,84 @@ body {
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    position: relative; /* เพิ่มเพื่อควบคุมการจัดวาง element ภายใน */
 }
 
-h1 {
-    text-align: center;
+.title-header {
+    position: relative; /* ใช้ relative เพื่อควบคุมตำแหน่งลูก element */
+    margin-top: 20px;
+    margin-bottom: 20px;
+    text-align: center; /* จัดกึ่งกลาง h1 */
+}
+
+.title-header h1 {
     color: #333;
+    margin: 0; /* ลบ margin เพื่อให้อยู่กึ่งกลางแน่นอน */
+}
+
+.title-header a {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #a463ff;
+    font-size: 24px;
+    text-decoration: none;
+}
+
+.title-header a:hover {
+    color: #7b68ee;
+}
+
+.status-sort-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.topic-status {
+    display: flex;
+    gap: 12px;
+}
+
+.topic-status button {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: none;
+    background: #f1f3f5;
+    color: #7f8c8d;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.topic-status button:hover {
+    background: #e0e4e8;
+}
+
+.topic-status button.active {
+    background: #fe7801;
+    color: white;
+}
+
+#sortOrder {
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+
+#sortOrder:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+.divider {
+    height: 1px;
+    background: #e0e4e8;
+    margin: 20px 0;
 }
 
 .title-item {
@@ -47,43 +119,6 @@ h1 {
     background: #0056b3;
 }
 
-.header-container {
-    display: flex;
-    justify-content: center; /* เปลี่ยนจาก space-between เป็น center */
-    align-items: center;
-    gap: 20px; /* เพิ่มระยะห่างระหว่าง elements ถ้ามีมากกว่า 1 */
-    margin-bottom: 20px;
-}
-
-.back-btn {
-    position: absolute; /* ย้าย back-btn ไปซ้าย */
-    left: 20px;
-    display: inline-block;
-    padding: 10px 15px;
-    background: #ccc;
-    color: #333;
-    text-decoration: none;
-    border-radius: 5px;
-}
-
-.back-btn:hover {
-    background: #bbb;
-}
-
-#sortOrder {
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    font-size: 14px;
-    transition: border-color 0.3s ease;
-}
-
-#sortOrder:focus {
-    border-color: #007bff;
-    outline: none;
-}
-
-/* pagination */
 .pagination {
     margin: 20px 0;
     text-align: center;
