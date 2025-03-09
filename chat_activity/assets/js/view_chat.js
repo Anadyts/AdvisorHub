@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // ฟังก์ชันเปลี่ยนจำนวนผลลัพธ์ต่อหน้า
     function changeResultsPerPage(perPage) {
         const sortOrder = document.getElementById('sortOrder').value;
-        const finalPerPage = Math.min(parseInt(perPage), totalRecords);
+        const finalPerPage = parseInt(perPage); // ใช้ค่าที่เลือกโดยตรง
         window.location.href = `?student_id=${studentId}&advisor_id=${advisorId}&page=1&results_per_page=${finalPerPage}&sort_order=${sortOrder}&section=${activeSection}`;
     }
 
