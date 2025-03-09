@@ -29,10 +29,6 @@ $advisor_id = $_GET['advisor_id'];
 $sort_order = isset($_GET['sort_order']) ? $_GET['sort_order'] : 'newest';
 $order_direction = ($sort_order === 'newest') ? 'DESC' : 'ASC';
 
-// กำหนดตัวแปรสำหรับการแบ่งหน้า (pagination)
-$results_per_page = isset($_GET['results_per_page']) ? (int)$_GET['results_per_page'] : 20; // จำนวนผลลัพธ์ต่อหน้า
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1; // หน้าปัจจุบัน
-
 // ตรวจสอบสถานะการอนุมัติจากตาราง advisor_request
 $sql_approval = "
     SELECT COUNT(*) as approved, MIN(time_stamp) as approval_timestamp 
@@ -45,23 +41,23 @@ $stmt_approval->bind_param("ss", $advisor_id, $student_id_json);
 $stmt_approval->execute();
 $approval_result = $stmt_approval->get_result();
 $approval_row = $approval_result->fetch_assoc();
-$is_fully_approved = $approval_row['approved'] > 0; // ตรวจสอบว่ามีการอนุมัติครบถ้วนหรือไม่
-$approval_timestamp = $is_fully_approved ? $approval_row['approval_timestamp'] : null; // เวลาที่อนุมัติ
+$is_fully_approved = $approval_row['approved'] > 0; // กำหนด $is_fully_approved ที่นี่
+$approval_timestamp = $is_fully_approved ? $approval_row['approval_timestamp'] : null;
 
 // ฟังก์ชันนับจำนวนข้อความตามประเภท (ก่อนหรือหลังการอนุมัติ)
 function fetchMessageCount($conn, $student_id, $advisor_id, $approval_timestamp, $type)
 {
     $where_clause = "WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))";
     if ($type === 'before' && $approval_timestamp !== null) {
-        $where_clause .= " AND time_stamp <= ?"; // ข้อความก่อนการอนุมัติ
+        $where_clause .= " AND time_stamp <= ?";
         $where_clause .= " AND message_title NOT IN (
             SELECT message_title 
             FROM messages 
             WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))
             AND time_stamp > ?
-        )"; // กรองข้อความที่ไม่ข้ามช่วงการอนุมัติ
+        )";
     } elseif ($type === 'after' && $approval_timestamp !== null) {
-        $where_clause .= " AND time_stamp > ?"; // ข้อความหลังการอนุมัติ
+        $where_clause .= " AND time_stamp > ?";
     }
 
     $sql = "SELECT COUNT(DISTINCT message_title) as total FROM messages $where_clause";
@@ -73,7 +69,7 @@ function fetchMessageCount($conn, $student_id, $advisor_id, $approval_timestamp,
             $advisor_id,
             $advisor_id,
             $student_id,
-            $approval_timestamp, // Main query
+            $approval_timestamp, // Main Query
             $student_id,
             $advisor_id,
             $advisor_id,
@@ -88,18 +84,20 @@ function fetchMessageCount($conn, $student_id, $advisor_id, $approval_timestamp,
     $stmt->execute();
     $result = $stmt->get_result();
     $row = $result->fetch_assoc();
-    return $row['total'] > 0 ? $row['total'] : 0; // ส่งคืนจำนวนข้อความ หากไม่มีให้คืน 0
+    return $row['total'] > 0 ? $row['total'] : 0;
 }
 
 // นับจำนวนข้อความก่อนและหลังการอนุมัติ
 $before_messages_total = fetchMessageCount($conn, $student_id, $advisor_id, $approval_timestamp, 'before');
 $after_messages_total = fetchMessageCount($conn, $student_id, $advisor_id, $approval_timestamp, 'after');
 
-// กำหนดส่วนที่ใช้งานอยู่ (ก่อนหรือหลังการอนุมัติ) ค่าเริ่มต้นขึ้นอยู่กับสถานะการอนุมัติ
+// กำหนดส่วนที่ใช้งานอยู่และจำนวนทั้งหมด
 $active_section = isset($_GET['section']) ? $_GET['section'] : ($is_fully_approved ? 'after' : 'before');
-
-// คำนวณจำนวนหน้าทั้งหมดในส่วนที่เลือก
 $active_total = $active_section === 'before' ? $before_messages_total : $after_messages_total;
+
+// กำหนดตัวแปรสำหรับการแบ่งหน้า (pagination) หลังจากได้ $active_total
+$results_per_page = isset($_GET['results_per_page']) ? (int)$_GET['results_per_page'] : $active_total; // เริ่มต้นที่ All
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $total_pages = ($active_total > 0) ? ceil($active_total / $results_per_page) : 1;
 
 // คำนวณจุดเริ่มต้นของผลลัพธ์
@@ -143,7 +141,7 @@ if ($active_section === 'before' && $approval_timestamp !== null) {
         $advisor_id,
         $advisor_id,
         $student_id,
-        $approval_timestamp, // Main query
+        $approval_timestamp, // Main Query
         $student_id,
         $advisor_id,
         $advisor_id,
@@ -176,7 +174,6 @@ $end_result = ($active_total > 0) ? min($start_from + $results_per_page, $active
     <link rel="stylesheet" href="assets/css/view_chat.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        // ส่งค่าตัวแปร PHP ไปยัง JavaScript
         const resultsPerPage = <?php echo json_encode($results_per_page); ?>;
         const studentId = <?php echo json_encode($student_id); ?>;
         const advisorId = <?php echo json_encode($advisor_id); ?>;
@@ -188,48 +185,45 @@ $end_result = ($active_total > 0) ? min($start_from + $results_per_page, $active
 </head>
 
 <body>
-    <?php renderNavbar(['home', 'advisor', 'statistics']); // แสดงแถบนำทาง 
-    ?>
+    <?php renderNavbar(['home', 'advisor', 'statistics']); ?>
 
     <div id="chatData" data-student-id="<?php echo htmlspecialchars($student_id); ?>" data-advisor-id="<?php echo htmlspecialchars($advisor_id); ?>" data-total-records="<?php echo htmlspecialchars($active_total); ?>">
         <div class="container">
             <div class="title-header">
-                <a href="index.php" class="fa-solid fa-arrow-left"></a> <!-- ปุ่มย้อนกลับ -->
-                <h1>Chat Titles</h1> <!-- หัวข้อหน้า -->
+                <a href="index.php" class="fa-solid fa-arrow-left"></a>
+                <h1>Chat Titles</h1>
             </div>
 
             <div class="status-sort-container">
                 <div class="topic-status">
-                    <?php if ($is_fully_approved): // ถ้ามีการอนุมัติครบถ้วน แสดงปุ่มทั้งสอง 
-                    ?>
+                    <?php if ($is_fully_approved): ?>
                         <button class="<?php echo $active_section === 'after' ? 'active' : ''; ?>" data-section="after">Post-Approval</button>
                         <button class="<?php echo $active_section === 'before' ? 'active' : ''; ?>" data-section="before">Pre-Approval</button>
-                    <?php else: // ถ้ายังไม่มีการอนุมัติ แสดงเฉพาะ Pre-Approval 
-                    ?>
+                    <?php else: ?>
                         <button class="active" data-section="before">Pre-Approval</button>
                     <?php endif; ?>
                 </div>
-                <select id="sortOrder"> <!-- ตัวเลือกการเรียงลำดับ -->
+                <select id="sortOrder">
                     <option value="newest" <?php echo $sort_order === 'newest' ? 'selected' : ''; ?>>Newest</option>
                     <option value="oldest" <?php echo $sort_order === 'oldest' ? 'selected' : ''; ?>>Oldest</option>
                 </select>
             </div>
 
-            <div class="divider"></div> <!-- เส้นแบ่ง -->
+            <div class="divider"></div>
 
             <div id="titleContainer">
                 <?php
-                if (mysqli_num_rows($result) > 0) { // ถ้ามีหัวข้อข้อความ
+                if (mysqli_num_rows($result) > 0) {
                     while ($row = mysqli_fetch_assoc($result)) {
                 ?>
                         <div class="title-item" data-timestamp="<?php echo htmlspecialchars($row['latest_timestamp']); ?>">
-                            <span><?php echo htmlspecialchars($row['message_title']); ?></span> <!-- แสดงชื่อหัวข้อ -->
-                            <button onclick="window.location.href='chat_details.php?student_id=<?php echo $student_id; ?>&advisor_id=<?php echo $advisor_id; ?>&title=<?php echo urlencode($row['message_title']); ?>'">View</button> <!-- ปุ่มดูรายละเอียด -->
+                            <span><?php echo htmlspecialchars($row['message_title']); ?></span>
+                            <button onclick="window.location.href='chat_details.php?student_id=<?php echo $student_id; ?>&advisor_id=<?php echo $advisor_id; ?>&title=<?php echo urlencode($row['message_title']); ?>'">View</button>
                         </div>
                 <?php
                     }
                 } else {
-                    echo "<p>No message titles found in this section.</p>"; // ถ้าไม่มีหัวข้อในส่วนนี้
+                    echo "<p>No message titles found in this section.</p>";
                 }
                 ?>
             </div>
@@ -262,10 +256,19 @@ $end_result = ($active_total > 0) ? min($start_from + $results_per_page, $active
                 <div class="results-info">
                     Results: <?php echo "$start_result - $end_result of $active_total titles"; ?>
                     <select class="results-per-page">
-                        <option value="20" <?php echo $results_per_page == 20 ? 'selected' : ''; ?>>20</option>
-                        <option value="50" <?php echo $results_per_page == 50 ? 'selected' : ''; ?>>50</option>
-                        <option value="100" <?php echo $results_per_page == 100 ? 'selected' : ''; ?>>100</option>
-                        <option value="<?php echo $active_total; ?>" <?php echo $results_per_page == $active_total ? 'selected' : ''; ?>>All</option>
+                        <?php if ($active_total >= 10): ?>
+                            <option value="10" <?php echo $results_per_page == 10 ? 'selected' : ''; ?>>10</option>
+                        <?php endif; ?>
+                        <?php if ($active_total >= 20): ?>
+                            <option value="20" <?php echo $results_per_page == 20 ? 'selected' : ''; ?>>20</option>
+                        <?php endif; ?>
+                        <?php if ($active_total >= 50): ?>
+                            <option value="50" <?php echo $results_per_page == 50 ? 'selected' : ''; ?>>50</option>
+                        <?php endif; ?>
+                        <?php if ($active_total >= 100): ?>
+                            <option value="100" <?php echo $results_per_page == 100 ? 'selected' : ''; ?>>100</option>
+                        <?php endif; ?>
+                        <option value="<?php echo $active_total; ?>" <?php echo $results_per_page == $active_total ? 'selected' : ''; ?>>All (<?php echo $active_total; ?>)</option>
                     </select>
                 </div>
             <?php endif; ?>
@@ -278,5 +281,5 @@ $end_result = ($active_total > 0) ? min($start_from + $results_per_page, $active
 <?php
 $stmt->close();
 $stmt_approval->close();
-$conn->close(); // ปิดการเชื่อมต่อฐานข้อมูล
+$conn->close();
 ?>
