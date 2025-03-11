@@ -91,7 +91,7 @@ body {
     margin: 20px 0;
 }
 
-.title-item {
+.title-container {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -103,11 +103,25 @@ body {
 }
 
 .title-item span {
-    font-weight: bold;
+    display: block;
+    margin-left: 5px;
 }
 
-.title-item button {
+.title-message {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.date-message {
+    font-size: 12px;
+    font-weight: 400;
+    color: #7f8c8d;
+}
+
+.view-message-btn {
     padding: 5px 10px;
+    margin-right: 5px;
     background: #007bff;
     color: white;
     border: none;
@@ -115,7 +129,7 @@ body {
     cursor: pointer;
 }
 
-.title-item button:hover {
+.view-message-btn:hover {
     background: #0056b3;
 }
 

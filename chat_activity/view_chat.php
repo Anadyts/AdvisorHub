@@ -216,9 +216,12 @@ $end_result = ($active_total > 0) ? min($start_from + $results_per_page, $active
                 if (mysqli_num_rows($result) > 0) {
                     while ($row = mysqli_fetch_assoc($result)) {
                 ?>
-                        <div class="title-item" data-timestamp="<?php echo htmlspecialchars($row['latest_timestamp']); ?>">
-                            <span><?php echo htmlspecialchars($row['message_title']); ?></span>
-                            <button onclick="window.location.href='chat_details.php?student_id=<?php echo $student_id; ?>&advisor_id=<?php echo $advisor_id; ?>&title=<?php echo urlencode($row['message_title']); ?>'">View</button>
+                        <div class="title-container">
+                            <div class="title-item" data-timestamp="<?php echo htmlspecialchars($row['latest_timestamp']); ?>">
+                                <span class="title-message"><?php echo htmlspecialchars($row['message_title']); ?></span>
+                                <span class="date-message"><?php echo htmlspecialchars($row['latest_timestamp']); ?></span>
+                            </div>
+                            <button class="view-message-btn" onclick="window.location.href='chat_details.php?student_id=<?php echo $student_id; ?>&advisor_id=<?php echo $advisor_id; ?>&title=<?php echo urlencode($row['message_title']); ?>'">View</button>
                         </div>
                 <?php
                     }
