@@ -33,14 +33,15 @@ function renderNavbar($allowedPages)
 
             if (isset($_SESSION['username']) && ($_SESSION['role'] == 'advisor' ||  $_SESSION['role'] == 'student')) {
                 echo "<li><a href='/AdvisorHub/advisor_approved/request.php'>Request</a></li>";
-                echo "<li><a href='/AdvisorHub/dashboard/'>Dashboard</a></li>";
+                echo "<li><a href='/AdvisorHub/summary/'>Summary</a></li>";
              
             }elseif(isset($_SESSION['username']) && $_SESSION['role'] == 'admin'){
                 echo "<li><a href='/AdvisorHub/chat_activity'>Activity</a></li>";
+                echo "<li><a href='/AdvisorHub/summary/'>Summary</a></li>";
                 echo "<li><a href='/AdvisorHub/dashboard/'>Dashboard</a></li>";
                 echo "<li><a href='/AdvisorHub/admin_approved/'>Request</a></li>";
             }elseif(empty($_SESSION['username'])){
-                echo "<li><a href='/AdvisorHub/dashboard/'>Dashboard</a></li>";
+                echo "<li><a href='/AdvisorHub/summary/'>Summary</a></li>";
             }
             
             ?>

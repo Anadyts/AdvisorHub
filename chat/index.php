@@ -51,7 +51,7 @@ if(isset($_SESSION['username']) && $_SESSION['role'] == 'admin'){
 
 <body>
 
-    <?php renderNavbar(['home', 'advisor', 'inbox', 'statistics', 'Teams']) ?>
+    <?php renderNavbar(allowedPages: ['home', 'advisor', 'inbox', 'statistics', 'Teams']) ?>
 
     <?php
     if (isset($_SESSION['receiver_id'])) {
