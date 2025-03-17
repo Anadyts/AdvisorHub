@@ -11,6 +11,9 @@ h1 {
     margin-bottom: 20px; /* ระยะห่างด้านล่างของ h1 */
 }
 
+.wrap-advisor{
+    margin-top: 1rem;
+}
 .container {
     width: 90%;
     max-width: 800px;
