@@ -73,16 +73,26 @@ $result = $stmt->get_result();
                 <li class="list-group-item">
                     <strong>รหัสนิสิต:</strong> <?php echo htmlspecialchars($student_id); ?><br>
                     <strong>ชื่อ:</strong> <?php echo htmlspecialchars($row_name['student_first_name']) . " " . htmlspecialchars($row_name['student_last_name']); ?><br>
-                    <strong>อาจารย์ที่ปรึกษา:</strong> <?php echo htmlspecialchars($row['advisor_first_name']) . " " . htmlspecialchars($row['advisor_last_name']); 
-                            if ($row['is_advisor_approved'] == 0) {
-                                echo " (รอการอนุมัติ)";
-                            } elseif ($row['is_advisor_approved'] == 1) {
-                                echo " (อนุมัติแล้ว)";
-                            } elseif ($row['is_advisor_approved'] == 2) {
-                                echo " (ปฏิเสธแล้ว)";
-                            }?>
+                    
+                    <?php
+
+                    ?>
                 </li>
-            <?php endforeach; ?>
+                <div class="wrap-advisor">
+                <strong>อาจารย์ที่ปรึกษา:</strong> 
+                    <?php endforeach; 
+                        echo htmlspecialchars($row['advisor_first_name']) . " " . htmlspecialchars($row['advisor_last_name']);
+                        if ($row['is_advisor_approved'] == 0) {
+                            echo " (รอการอนุมัติ)";
+                        } elseif ($row['is_advisor_approved'] == 1) {
+                            echo " (อนุมัติแล้ว)";
+                        } elseif ($row['is_advisor_approved'] == 2) {
+                            echo " (ปฏิเสธแล้ว)";
+                        }
+                    ?>
+                </div>
+
+
         </ul> <!-- ปิด <ul> หลังจาก loop foreach -->
 
         <div class="wrap-foot d-flex align-items-center mt-3">
