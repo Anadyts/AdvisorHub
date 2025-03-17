@@ -21,6 +21,16 @@ if (isset($_POST['profile'])) {
     exit();
 }
 
+$sql = "SELECT 
+            advisor_request_id, 
+            student_id, 
+            thesis_topic_thai, 
+            thesis_topic_eng, 
+            time_stamp 
+        FROM advisor_request 
+        WHERE partner_accepted = 0";
+$result = $conn->query($sql);
+
 ?>
 
 <!DOCTYPE html>
@@ -34,5 +44,38 @@ if (isset($_POST['profile'])) {
 </head>
 <body>
     <?php renderNavbar(allowedPages: ['home', 'advisor','statistics']) ?>
+    <h2 class="header">รายละเอียดคำขอจาก Partner ที่รอดำเนินการ</h2>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>รหัสคำขอ</th>
+                    <th>รหัสนิสิต</th>
+                    <th>หัวข้อวิทยานิพนธ์ (ไทย)</th>
+                    <th>หัวข้อวิทยานิพนธ์ (อังกฤษ)</th>
+                    <th>วันที่ร้องขอ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                if ($result->num_rows > 0) {
+                    while ($row = $result->fetch_assoc()) {
+                        // แปลง timestamp เป็นรูปแบบวันที่ภาษาไทย
+                        $date = $row['time_stamp'];
+                        echo "<tr>
+                                <td>{$row['advisor_request_id']}</td>
+                                <td>{$row['student_id']}</td>
+                                <td>{$row['thesis_topic_thai']}</td>
+                                <td>{$row['thesis_topic_eng']}</td>
+                                <td>{$date}</td>
+                              </tr>";
+                    }
+                } else {
+                    echo "<tr><td colspan='5' class='no-data'>ไม่มีคำขอที่รอดำเนินการจาก Partner</td></tr>";
+                }
+                ?>
+            </tbody>
+        </table>
+    </div>
 </body>
 </html>
