@@ -29,8 +29,64 @@ if (isset($_POST['profile'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
+    <link rel="icon" href="../Logo.png">
+    <link rel="stylesheet" href="style/index.css">
 </head>
 <body>
     <?php renderNavbar(allowedPages: ['home', 'advisor','statistics']) ?>
+    <div class="container">
+        <!-- Partner Card -->
+        <a href="/AdvisorHub/dashboard/partner_pending.php">
+            <div class="card">
+                <div class="card-header partner">คำขอที่รอ Partner อนุมัติ</div>
+                <div class="card-body">
+                    <div class="card-number">
+                        <?php
+                            $sql = "SELECT COUNT(*) as count FROM advisor_request WHERE partner_accepted = 0";
+                            $result = $conn->query($sql);
+                            echo $result->fetch_assoc()['count'];
+                        ?>
+                    </div>
+                    <div class="card-label">คำขอที่รอดำเนินการ</div>
+                </div>
+                <div class="card-footer">อัปเดตล่าสุด: <?php echo date("Y-m-d H:i:s"); ?></div>
+            </div>
+        </a>
+        <!-- Admin Card -->
+        <a href="/AdvisorHub/dashboard/admin_pending.php">
+            <div class="card">
+                <div class="card-header admin">คำขอที่รอ Admin อนุมัติ</div>
+                <div class="card-body">
+                    <div class="card-number">
+                        <?php
+                            $sql = "SELECT COUNT(*) as count FROM advisor_request WHERE is_admin_approved = 0";
+                            $result = $conn->query($sql);
+                            echo $result->fetch_assoc()['count'];
+                        ?>
+                    </div>
+                    <div class="card-label">คำขอที่รอดำเนินการ</div>
+                </div>
+                <div class="card-footer">อัปเดตล่าสุด: <?php echo date("Y-m-d H:i:s"); ?></div>
+            </div>
+        </a>
+
+        <!-- Advisor Card -->
+        <a href="/AdvisorHub/dashboard/advisor_pending.php">
+            <div class="card">
+                <div class="card-header advisor">คำขอที่รอ Advisor อนุมัติ</div>
+                <div class="card-body">
+                    <div class="card-number">
+                    <?php
+                        $sql = "SELECT COUNT(*) as count FROM advisor_request WHERE is_advisor_approved = 0";
+                        $result = $conn->query($sql);
+                        echo $result->fetch_assoc()['count'];
+                    ?>
+                    </div>
+                    <div class="card-label">คำขอที่รอดำเนินการ</div>
+                </div>
+                <div class="card-footer">อัปเดตล่าสุด: <?php echo date("Y-m-d H:i:s"); ?></div>
+            </div>
+        </a>
+    </div>
 </body>
 </html>
