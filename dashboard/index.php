@@ -42,7 +42,7 @@ if (isset($_POST['profile'])) {
                 <div class="card-body">
                     <div class="card-number">
                         <?php
-                            $sql = "SELECT COUNT(*) as count FROM advisor_request WHERE partner_accepted = 0";
+                            $sql = "SELECT COUNT(*) as count FROM advisor_request WHERE partner_accepted = 0 AND is_admin_approved != 2 AND is_advisor_approved != 2";
                             $result = $conn->query($sql);
                             echo $result->fetch_assoc()['count'];
                         ?>
@@ -59,7 +59,7 @@ if (isset($_POST['profile'])) {
                 <div class="card-body">
                     <div class="card-number">
                         <?php
-                            $sql = "SELECT COUNT(*) as count FROM advisor_request WHERE is_admin_approved = 0";
+                            $sql = "SELECT COUNT(*) as count FROM advisor_request WHERE partner_accepted != 2 AND is_admin_approved = 0 AND is_advisor_approved != 2";
                             $result = $conn->query($sql);
                             echo $result->fetch_assoc()['count'];
                         ?>
@@ -77,7 +77,7 @@ if (isset($_POST['profile'])) {
                 <div class="card-body">
                     <div class="card-number">
                     <?php
-                        $sql = "SELECT COUNT(*) as count FROM advisor_request WHERE is_advisor_approved = 0";
+                        $sql = "SELECT COUNT(*) as count FROM advisor_request WHERE partner_accepted != 2 AND is_admin_approved != 2 AND is_advisor_approved = 0";
                         $result = $conn->query($sql);
                         echo $result->fetch_assoc()['count'];
                     ?>
