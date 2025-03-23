@@ -47,6 +47,8 @@ if ($selected_year != null) {
     $sql .= " AND academic_year = $selected_year";
 }
 
+$sql .= " ORDER BY academic_year DESC";
+
 $result = $conn->query($sql);
 ?>
 
