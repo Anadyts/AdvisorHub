@@ -41,6 +41,14 @@
     background: linear-gradient(135deg, #10b981, #047857);
 }
 
+.card-header.accepted {
+    background: linear-gradient(135deg, #8910b9, #610478);
+}
+
+.card-header.rejected {
+    background: linear-gradient(135deg, #b91010, #780404);
+}
+
 .card-body {
     padding: 20px;
     text-align: center;

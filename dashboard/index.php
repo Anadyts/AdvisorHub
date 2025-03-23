@@ -87,6 +87,42 @@ if (isset($_POST['profile'])) {
                 <div class="card-footer">อัปเดตล่าสุด: <?php echo date("Y-m-d H:i:s"); ?></div>
             </div>
         </a>
+
+
+        <a href="/AdvisorHub/dashboard/accepted_request.php">
+            <div class="card">
+                <div class="card-header accepted">คำขอที่ถูกอนุมัติ</div>
+                <div class="card-body">
+                    <div class="card-number">
+                    <?php
+                        $sql = "SELECT COUNT(*) as count FROM advisor_request WHERE partner_accepted = 1 AND is_admin_approved = 1 AND is_advisor_approved = 1";
+                        $result = $conn->query($sql);
+                        echo $result->fetch_assoc()['count'];
+                    ?>
+                    </div>
+                    <div class="card-label">คำขอที่ถูกอนุมัติ</div>
+                </div>
+                <div class="card-footer">อัปเดตล่าสุด: <?php echo date("Y-m-d H:i:s"); ?></div>
+            </div>
+        </a>
+
+
+        <a href="/AdvisorHub/dashboard/rejected_request.php">
+            <div class="card">
+                <div class="card-header rejected">คำขอที่ถูกปฎิเสธ</div>
+                <div class="card-body">
+                    <div class="card-number">
+                    <?php
+                        $sql = "SELECT COUNT(*) as count FROM advisor_request WHERE partner_accepted = 2 OR is_admin_approved = 2 OR is_advisor_approved = 2";
+                        $result = $conn->query($sql);
+                        echo $result->fetch_assoc()['count'];
+                    ?>
+                    </div>
+                    <div class="card-label">คำขอที่ถูกปฎิเสธ</div>
+                </div>
+                <div class="card-footer">อัปเดตล่าสุด: <?php echo date("Y-m-d H:i:s"); ?></div>
+            </div>
+        </a>
     </div>
 </body>
 </html>
