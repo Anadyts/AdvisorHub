@@ -13,7 +13,7 @@ if (isset($_POST['logout'])) {
     header('location: /AdvisorHub/login');
 }
 
-// ตรวจสอบว่ามีพารามิเตอร์ที่จำเป็นครบถ้วนหรือไม่
+// Check required parameters
 if (!isset($_GET['student_id']) || !isset($_GET['advisor_id']) || !isset($_GET['title'])) {
     header("Location: view_chat.php");
     exit();
@@ -24,11 +24,11 @@ $advisor_id = $_GET['advisor_id'];
 $message_title = $_GET['title'];
 
 // Pagination variables
-$results_per_page = isset($_GET['results_per_page']) ? $_GET['results_per_page'] : 10; // จำนวนผลลัพธ์ต่อหน้า (ค่าเริ่มต้น 10)
-$page = isset($_GET['page']) ? $_GET['page'] : 1; // หน้าปัจจุบัน
-$start_from = ($page - 1) * $results_per_page; // จุดเริ่มต้นของข้อมูล
+$results_per_page = isset($_GET['results_per_page']) ? $_GET['results_per_page'] : 10;
+$page = isset($_GET['page']) ? $_GET['page'] : 1;
+$start_from = ($page - 1) * $results_per_page;
 
-// คำสั่ง SQL เพื่อนับจำนวนข้อความทั้งหมด
+// Count total messages
 $count_sql = "
     SELECT COUNT(*) as total 
     FROM messages m
@@ -41,12 +41,31 @@ $stmt_count->execute();
 $count_result = $stmt_count->get_result();
 $count_row = mysqli_fetch_assoc($count_result);
 $total_records = $count_row['total'];
-$total_pages = ceil($total_records / $results_per_page); // คำนวณจำนวนหน้าทั้งหมด
+$total_pages = ceil($total_records / $results_per_page);
 
-// คำสั่ง SQL หลักพร้อม LIMIT
+// Get student and advisor names for reference
+$names_sql = "
+    SELECT 
+        CONCAT(s.student_first_name, ' ', s.student_last_name) AS student_name,
+        CONCAT(a.advisor_first_name, ' ', a.advisor_last_name) AS advisor_name
+    FROM 
+        student s, advisor a
+    WHERE 
+        s.student_id = ? AND a.advisor_id = ?
+";
+$stmt_names = $conn->prepare($names_sql);
+$stmt_names->bind_param("ii", $student_id, $advisor_id);
+$stmt_names->execute();
+$names_result = $stmt_names->get_result();
+$names_row = mysqli_fetch_assoc($names_result);
+$student_name = $names_row['student_name'];
+$advisor_name = $names_row['advisor_name'];
+
+// Main SQL query
 $sql = "
     SELECT 
         m.message_id, 
+        m.sender_id,
         m.message_title, 
         m.message, 
         m.message_file_name, 
@@ -66,7 +85,7 @@ $sql = "
         ((m.sender_id = ? AND m.receiver_id = ?) OR (m.sender_id = ? AND m.receiver_id = ?))
         AND m.message_title = ? 
     ORDER BY 
-        m.time_stamp DESC 
+        m.time_stamp ASC
     LIMIT ?, ?
 ";
 
@@ -75,7 +94,7 @@ $stmt->bind_param("iiiisii", $student_id, $advisor_id, $advisor_id, $student_id,
 $stmt->execute();
 $result = $stmt->get_result();
 
-// คำนวณช่วงผลลัพธ์ (เช่น 1-10)
+// Calculate result range
 $start_result = ($page - 1) * $results_per_page + 1;
 $end_result = min($page * $results_per_page, $total_records);
 ?>
@@ -108,53 +127,142 @@ $end_result = min($page * $results_per_page, $total_records);
 
         h1 {
             text-align: center;
-            color: #333;
+            color: #410690;
+        }
+
+        .chat-header {
+            background-color: #410690;
+            color: white;
+            padding: 15px;
+            border-radius: 10px 10px 0 0;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-title {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+            max-height: 600px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
         }
 
         .message {
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-            background: #f9f9f9;
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 10px;
+            position: relative;
+            word-wrap: break-word;
         }
 
-        .message span {
-            font-weight: bold;
+        .message-left {
+            align-self: flex-start;
+            background-color: #e9e9eb;
+            color: #333;
+            border-bottom-left-radius: 2px;
         }
 
-        .message p {
+        .message-right {
+            align-self: flex-end;
+            background-color: #410690;
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        .message-info {
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+        }
+
+        .message-left .message-info {
+            color: #666;
+        }
+
+        .message-right .message-info {
+            color: #f0f0f0;
+            text-align: right;
+        }
+
+        .message-content {
             margin: 5px 0;
         }
 
-        .download-btn {
-            padding: 5px 10px;
-            background: #007bff;
-            color: white;
-            border: none;
+        .message-file {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px;
             border-radius: 5px;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .download-btn {
+            padding: 3px 8px;
+            background: #fff;
+            color: #410690;
+            border: none;
+            border-radius: 4px;
             cursor: pointer;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+
+        .message-right .download-btn {
+            background: #fff;
+            color: #410690;
+        }
+
+        .message-left .download-btn {
+            background: #410690;
+            color: #fff;
         }
 
         .download-btn:hover {
-            background: #0056b3;
+            opacity: 0.9;
+        }
+
+        .time-stamp {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .message-left .time-stamp {
+            text-align: left;
+        }
+
+        .message-right .time-stamp {
+            text-align: right;
         }
 
         .back-btn {
             display: inline-block;
             margin-bottom: 20px;
             padding: 10px 15px;
-            background: #ccc;
-            color: #333;
+            background: #410690;
+            color: white;
             text-decoration: none;
             border-radius: 5px;
+            transition: background-color 0.3s;
         }
 
         .back-btn:hover {
-            background: #bbb;
+            background: #330572;
         }
 
-        /* Pagination styles จาก index.php */
+        /* Pagination styles */
         .pagination {
             margin: 20px 0;
             text-align: center;
@@ -178,9 +286,9 @@ $end_result = min($page * $results_per_page, $total_records);
         }
 
         .pagination a.active {
-            background-color: #007bff;
+            background-color: #410690;
             color: white;
-            border-color: #007bff;
+            border-color: #410690;
         }
 
         .pagination a.disabled {
@@ -213,6 +321,13 @@ $end_result = min($page * $results_per_page, $total_records);
             margin-left: 10px;
             font-size: 14px;
         }
+
+        .no-messages {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-style: italic;
+        }
     </style>
 </head>
 
@@ -228,43 +343,61 @@ $end_result = min($page * $results_per_page, $total_records);
     ?>
 
     <div class="container">
-        <h1>Chat Details - <?php echo htmlspecialchars($message_title); ?></h1>
-        <a href="view_chat.php?student_id=<?php echo $student_id; ?>&advisor_id=<?php echo $advisor_id; ?>" class="back-btn">Back to Chat Title</a>
+        <div class="chat-header">
+            <h2 class="chat-title">ChatDetail - <?php echo htmlspecialchars($message_title); ?></h2>
+            <div>
+                <span style="font-size: 0.9rem;"><?php echo htmlspecialchars($student_name); ?> - <?php echo htmlspecialchars($advisor_name); ?></span>
+            </div>
+        </div>
+        
+        
 
-        <?php
-        if (mysqli_num_rows($result) > 0) {
-            while ($row = mysqli_fetch_assoc($result)) {
-        ?>
-                <div class="message">
-                    <span><?php echo htmlspecialchars($row['sender_name']); ?> - <?php echo htmlspecialchars($row['time_stamp']); ?></span>
-                    <p><strong>ข้อความ:</strong> <?php echo htmlspecialchars($row['message']); ?></p>
+        <div class="chat-container">
+            <?php
+            if (mysqli_num_rows($result) > 0) {
+                while ($row = mysqli_fetch_assoc($result)) {
+                    $is_student = ($row['sender_id'] == $student_id);
+                    $message_class = $is_student ? 'message-left' : 'message-right';
+            ?>
+                <div class="message <?php echo $message_class; ?>">
+                    <div class="message-info">
+                        <?php echo htmlspecialchars($row['sender_name']); ?>
+                    </div>
+                    <div class="message-content">
+                        <?php echo nl2br(htmlspecialchars($row['message'])); ?>
+                    </div>
                     <?php if (!empty($row['message_file_name'])) { ?>
-                        <p><strong>ไฟล์:</strong> <?php echo htmlspecialchars($row['message_file_name']); ?> (<?php echo htmlspecialchars($row['message_file_type']); ?>)
-                        <form action="download_file.php" method="POST" style="display: inline;">
-                            <input type="hidden" name="message_id" value="<?php echo $row['message_id']; ?>">
-                            <button type="submit" class="download-btn">ดาวน์โหลด</button>
-                        </form>
-                        </p>
+                        <div class="message-file">
+                            <span><?php echo htmlspecialchars($row['message_file_name']); ?></span>
+                            <form action="download_file.php" method="POST" style="display: inline;">
+                                <input type="hidden" name="message_id" value="<?php echo $row['message_id']; ?>">
+                                <button type="submit" class="download-btn">Download</button>
+                            </form>
+                        </div>
                     <?php } ?>
+                    <div class="time-stamp">
+                        <?php echo date('d/m/Y H:i', strtotime($row['time_stamp'])); ?>
+                    </div>
                 </div>
-        <?php
+            <?php
+                }
+            } else {
+                echo "<div class='no-messages'>No messages found for this topic</div>";
             }
-        } else {
-            echo "<p>ไม่พบข้อความสำหรับหัวข้อนี้</p>";
-        }
-        ?>
+            ?>
+        </div>
 
         <!-- Pagination -->
         <div class="pagination">
             <?php
-            // ปุ่ม Previous
+            // Previous button
             if ($page > 1) {
                 echo "<a href='?student_id=$student_id&advisor_id=$advisor_id&title=" . urlencode($message_title) . "&page=" . ($page - 1) . "&results_per_page=$results_per_page' class='pagination-arrow'>«</a>";
             } else {
                 echo "<a href='#' class='pagination-arrow disabled'>«</a>";
             }
 
-            // แสดงหมายเลขหน้า
+            // Page numbers
             $max_pages_to_show = 5;
             $half_pages = floor($max_pages_to_show / 2);
             $start_page = max(1, $page - $half_pages);
@@ -284,7 +417,7 @@ $end_result = min($page * $results_per_page, $total_records);
                 echo "<a href='?student_id=$student_id&advisor_id=$advisor_id&title=" . urlencode($message_title) . "&page=$total_pages&results_per_page=$results_per_page' class='pagination-number'>$total_pages</a>";
             }
 
-            // ปุ่ม Next
+            // Next button
             if ($page < $total_pages) {
                 echo "<a href='?student_id=$student_id&advisor_id=$advisor_id&title=" . urlencode($message_title) . "&page=" . ($page + 1) . "&results_per_page=$results_per_page' class='pagination-arrow'>»</a>";
             } else {
@@ -293,7 +426,7 @@ $end_result = min($page * $results_per_page, $total_records);
             ?>
         </div>
 
-        <!-- แสดงข้อมูลผลลัพธ์ -->
+        <!-- Results info -->
         <div class="results-info">
             Results: <?php echo $start_result . " - " . $end_result . " of " . $total_records . " messages"; ?>
             <select class="results-per-page" onchange="changeResultsPerPage(this.value)">
@@ -303,6 +436,9 @@ $end_result = min($page * $results_per_page, $total_records);
                 <option value="<?php echo $total_records; ?>" <?php echo $results_per_page == $total_records ? 'selected' : ''; ?>>All</option>
             </select>
         </div>
+        <div>
+            <a href="view_chat.php?student_id=<?php echo $student_id; ?>&advisor_id=<?php echo $advisor_id; ?>" class="back-btn">Back to Chat Title</a>
+        </div>
     </div>
 
     <script>
@@ -310,6 +446,12 @@ $end_result = min($page * $results_per_page, $total_records);
             const finalPerPage = perPage === "<?php echo $total_records; ?>" ? "<?php echo $total_records; ?>" : perPage;
             window.location.href = `?student_id=<?php echo $student_id; ?>&advisor_id=<?php echo $advisor_id; ?>&title=<?php echo urlencode($message_title); ?>&page=1&results_per_page=${finalPerPage}`;
         }
+
+        // Auto-scroll to bottom of chat on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatContainer = document.querySelector('.chat-container');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        });
     </script>
 </body>
 
@@ -318,5 +460,6 @@ $end_result = min($page * $results_per_page, $total_records);
 <?php
 $stmt->close();
 $stmt_count->close();
+$stmt_names->close();
 $conn->close();
 ?>
