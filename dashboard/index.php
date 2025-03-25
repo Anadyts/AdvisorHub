@@ -32,7 +32,6 @@ if (isset($_POST['profile'])) {
     <link rel="icon" href="../Logo.png">
     <link rel="stylesheet" href="style/index.css">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script/chart_student_alltime.js"></script> 
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
@@ -129,46 +128,41 @@ if (isset($_POST['profile'])) {
                 <div class="card-footer">อัปเดตล่าสุด: <?php echo date("Y-m-d H:i:s"); ?></div>
             </div>
         </a>
-    </div>
-<!--------------------------- กราฟแสดงจำนวนนิสิตทั้งหมดของอาจารย์แต่ละคน ------------------------->
-    <?php
-    $sql = "SELECT 
-            advisor.advisor_id, 
-            CONCAT(advisor.advisor_first_name, ' ', advisor.advisor_last_name) AS advisor_name, 
-            SUM(
-                CASE 
-                    WHEN advisor_request.is_advisor_approved = 1 
-                        AND advisor_request.is_admin_approved = 1 
-                        AND advisor_request.is_even = 0 THEN 1
-                    WHEN advisor_request.is_advisor_approved = 1 
-                        AND advisor_request.is_admin_approved = 1 
-                        AND advisor_request.is_even = 1 THEN 2
-                    ELSE 0
-                END
-            ) AS total_students
-        FROM advisor_request
-        JOIN advisor ON advisor_request.advisor_id = advisor.advisor_id
-        GROUP BY advisor_request.advisor_id
-        ORDER BY total_students DESC";
+        
+        <!--------------------------- กราฟแสดงจำนวนนิสิตทั้งหมดของอาจารย์แต่ละคน ------------------------->
+        <?php
+        $sql = "SELECT 
+                advisor.advisor_id, 
+                CONCAT(advisor.advisor_first_name, ' ', advisor.advisor_last_name) AS advisor_name, 
+                SUM(
+                    CASE 
+                        WHEN advisor_request.is_advisor_approved = 1 
+                            AND advisor_request.is_admin_approved = 1 
+                            AND advisor_request.is_even = 0 THEN 1
+                        WHEN advisor_request.is_advisor_approved = 1 
+                            AND advisor_request.is_admin_approved = 1 
+                            AND advisor_request.is_even = 1 THEN 2
+                        ELSE 0
+                    END
+                ) AS total_students
+            FROM advisor_request
+            JOIN advisor ON advisor_request.advisor_id = advisor.advisor_id
+            GROUP BY advisor_request.advisor_id
+            ORDER BY total_students DESC";
 
-    $result = $conn->query($sql);
-    $data = [];
-    while ($row = $result->fetch_assoc()) {
-        $data[] = $row;
-    }
+        $result = $conn->query($sql);
+        $data = [];
+        while ($row = $result->fetch_assoc()) {
+            $data[] = $row;
+        }
+        ?>
 
-    ?>
-    <div class="container">
-        <div class="container-fluid mt-4" id="chartContainer" data-chart='<?php echo json_encode($data); ?>'>
-            <div class="row w-100">
-                <div class="col-12 mx-auto">
-                <h4 class="text-md-start mx-auto">กราฟแสดงจำนวนนิสิตทั้งหมดของอาจารย์แต่ละท่าน</h4>
-                <canvas id="advisorChart" class="w-100 h-75" ></canvas>
-                </div>
-            </div>
+        <div class="container-fluid" id="chartContainer" data-chart='<?php echo json_encode($data); ?>'>
+            <h4>กราฟแสดงจำนวนนิสิตทั้งหมดของอาจารย์แต่ละท่าน</h4>
+            <canvas id="advisorChart"></canvas>
         </div>
-    </div>
-<!-- ************************************************************************************************ -->
+        <!-- ************************************************************************************************ -->
 
+    </div>
 </body>
 </html>
