@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
     // ดึงข้อมูลจาก data attribute ใน HTML
-    const chartData = JSON.parse(document.getElementById('chartContainer1').getAttribute('data-chart'));
+    const chartData = JSON.parse(document.getElementById('chartCheck').getAttribute('data-chart'));
 
     const ctx = document.getElementById('advisorPieChart').getContext('2d');
 

@@ -59,7 +59,7 @@ if (isset($_POST['profile'])) {
         $students_without_advisor = $result_without_advisor->fetch_assoc()['students_without_advisor'];
         ?>
 
-        <div class="container-fluid" id="chartContainer1" data-chart='<?php echo json_encode(['studentsWithAdvisor' => $students_with_advisor, 'studentsWithoutAdvisor' => $students_without_advisor]); ?>'>
+        <div class="container-fluid" id="chartCheck" data-chart='<?php echo json_encode(['studentsWithAdvisor' => $students_with_advisor, 'studentsWithoutAdvisor' => $students_without_advisor]); ?>'>
             <h4>กราฟแสดงจำนวนนิสิตที่มีอาจารย์ที่ปรึกษาและยังไม่มีอาจารย์ที่ปรึกษา</h4>
             <canvas id="advisorPieChart"></canvas>
         </div>
@@ -181,7 +181,7 @@ if (isset($_POST['profile'])) {
         }
         ?>
 
-        <div class="container-fluid" id="chartContainer2" data-chart='<?php echo json_encode($data); ?>'>
+        <div class="container-fluid" id="chartContainer" data-chart='<?php echo json_encode($data); ?>'>
             <h4>กราฟแสดงจำนวนนิสิตทั้งหมดของอาจารย์แต่ละท่าน</h4>
             <canvas id="advisorChart"></canvas>
         </div>

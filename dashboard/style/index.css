@@ -107,7 +107,7 @@ h4 {
     margin-bottom: 20px;
 }
 
-#chartContainer1 {
+#chartCheck {
     background: white;
     width: 100%;
     max-width: 1550px; 
@@ -121,7 +121,7 @@ h4 {
     border-radius: 10px;
 }
 
-#chartContainer2 {
+#chartContainer {
     background: white;
     width: 100%;
     max-width: 1400px; 

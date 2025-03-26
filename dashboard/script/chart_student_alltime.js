@@ -1,6 +1,6 @@
 console.log("chart_student_alltime.js loaded!");
 document.addEventListener("DOMContentLoaded", function () {
-    const chartContainer = document.getElementById("chartContainer2");
+    const chartContainer = document.getElementById("chartContainer");
     const dataFromPHP = JSON.parse(chartContainer.getAttribute("data-chart"));
 
     const names = dataFromPHP.map(item => item.advisor_name);
