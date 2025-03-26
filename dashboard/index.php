@@ -34,12 +34,36 @@ if (isset($_POST['profile'])) {
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script/chart_student_alltime.js"></script> 
+    <script src="script/chart_check_student.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
     
 </head>
 <body>
     <?php renderNavbar(allowedPages: ['home', 'advisor','statistics']) ?>
     <div class="container">
+        <!-- กราฟแสดงจำนวนนิสิตที่มีอาจารย์ที่ปรึกษาและยังไม่มีอาจารย์ที่ปรึกษา -->
+        <?php
+        $sql_with_advisor = "SELECT COUNT(*) AS students_with_advisor
+                            FROM advisor_request 
+                            WHERE is_advisor_approved = 1 
+                            AND is_admin_approved = 1";
+        $result_with_advisor = $conn->query($sql_with_advisor);
+        $students_with_advisor = $result_with_advisor->fetch_assoc()['students_with_advisor'];
+
+        $sql_without_advisor = "SELECT COUNT(*) AS students_without_advisor
+                               FROM student s 
+                               LEFT JOIN advisor_request ar ON JSON_CONTAINS(ar.student_id, CONCAT('\"', s.student_id, '\"'))
+                               WHERE ar.advisor_request_id IS NULL 
+                               OR (ar.student_id IS NOT NULL AND ar.is_advisor_approved = 0 AND ar.is_admin_approved = 0)";
+        $result_without_advisor = $conn->query($sql_without_advisor);
+        $students_without_advisor = $result_without_advisor->fetch_assoc()['students_without_advisor'];
+        ?>
+
+        <div class="container-fluid" id="chartCheck" data-chart='<?php echo json_encode(['studentsWithAdvisor' => $students_with_advisor, 'studentsWithoutAdvisor' => $students_without_advisor]); ?>'>
+            <h4>กราฟแสดงจำนวนนิสิตที่มีอาจารย์ที่ปรึกษาและยังไม่มีอาจารย์ที่ปรึกษา</h4>
+            <canvas id="advisorPieChart"></canvas>
+        </div>
+
         <!-- Partner Card -->
         <a href="/AdvisorHub/dashboard/partner_pending.php">
             <div class="card">
@@ -162,7 +186,6 @@ if (isset($_POST['profile'])) {
             <canvas id="advisorChart"></canvas>
         </div>
         <!-- ************************************************************************************************ -->
-
     </div>
 </body>
 </html>
