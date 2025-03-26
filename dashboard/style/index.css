@@ -107,7 +107,21 @@ h4 {
     margin-bottom: 20px;
 }
 
-#chartContainer {
+#chartContainer1 {
+    background: white;
+    width: 100%;
+    max-width: 1550px; 
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    margin-top: 10px;
+    margin-bottom: 30px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-radius: 10px;
+}
+
+#chartContainer2 {
     background: white;
     width: 100%;
     max-width: 1400px; 
@@ -119,6 +133,14 @@ h4 {
     flex-direction: column;
     align-items: center;
     border-radius: 10px;
+}
+
+canvas#advisorPieChart {
+    width: 100% !important;  
+    max-width: 580px; 
+    height: 580px !important; 
+    border-radius: 8px;
+    padding: 10px;
 }
 
 canvas#advisorChart {
