@@ -79,7 +79,7 @@ $result = $stmt->get_result();
                     ?>
                 </li>
                 <div class="wrap-advisor">
-                <strong>อาจารย์ที่ปรึกษา:</strong> 
+                
                     <?php endforeach; 
                         echo htmlspecialchars($row['advisor_first_name']) . " " . htmlspecialchars($row['advisor_last_name']);
                         if ($row['is_advisor_approved'] == 0) {
