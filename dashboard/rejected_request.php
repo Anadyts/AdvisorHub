@@ -31,54 +31,61 @@ $selected_year = isset($_GET['academic_year']) ? $_GET['academic_year'] : null;
 $yearQuery = "SELECT DISTINCT academic_year FROM advisor_request ORDER BY academic_year DESC";
 $yearResult = $conn->query($yearQuery);
 
-// คิวรีข้อมูลที่ถูกปฏิเสธ โดยจะกรองปีการศึกษาถ้ามีค่า GET
+// คิวรีข้อมูลหลัก โดย JOIN กับตาราง advisor และดึงสถานะการปฏิเสธ
 $sql = "SELECT 
-            advisor_request_id, 
-            student_id, 
-            advisor_id,
-            thesis_topic_thai, 
-            thesis_topic_eng, 
-            academic_year,
-            time_stamp 
-        FROM advisor_request 
-        WHERE (partner_accepted = 2 OR is_admin_approved = 2 OR is_advisor_approved = 2)";
+            ar.advisor_request_id, 
+            ar.student_id,  
+            ar.advisor_id,
+            CONCAT(a.advisor_first_name, ' ', a.advisor_last_name) AS advisor_full_name,
+            ar.thesis_topic_thai, 
+            ar.thesis_topic_eng, 
+            ar.academic_year,
+            ar.time_stamp,
+            ar.partner_accepted,
+            ar.is_admin_approved,
+            ar.is_advisor_approved
+        FROM advisor_request ar
+        LEFT JOIN advisor a ON ar.advisor_id = a.advisor_id
+        WHERE (ar.partner_accepted = 2 OR ar.is_admin_approved = 2 OR ar.is_advisor_approved = 2)";
 
 if ($selected_year != null) {
-    $sql .= " AND academic_year = $selected_year";
+    $sql .= " AND ar.academic_year = $selected_year";
 }
 
-$sql .= " ORDER BY academic_year DESC";
+$sql .= " ORDER BY ar.academic_year DESC";
 
 $result = $conn->query($sql);
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rejected request</title>
+    <title>Rejected Requests</title>
     <link rel="icon" href="../Logo.png">
     <link rel="stylesheet" href="style/rejected_request.css">
 </head>
+
 <body>
     <?php renderNavbar(allowedPages: ['home', 'advisor', 'statistics']) ?>
 
-    <h2 class="header">รายละเอียดคำขอจากนิสิตที่ถูกปฎิเสธ</h2>
+    <h2 class="header">รายละเอียดคำขอจากนิสิตที่ถูกปฏิเสธ</h2>
 
     <!-- ฟอร์มเลือกปีการศึกษา -->
     <div class="filter-container">
         <form method="GET" class="filter-form">
             <label for="academic_year">ปีการศึกษา:</label>
             <select name="academic_year" id="academic_year" onchange="this.form.submit()">
-                 <option value="">ทั้งหมด</option> <!-- ค่าเริ่มต้น: แสดงทั้งหมด -->
-                 <?php
-                 while ($row = $yearResult->fetch_assoc()) {
-                     $year = $row['academic_year'];
-                     $selected = ($year == $selected_year) ? 'selected' : '';
-                     echo "<option value='$year' $selected>$year</option>";
-                 }
-                 ?>
+                <option value="">ทั้งหมด</option>
+                <?php
+                while ($row = $yearResult->fetch_assoc()) {
+                    $year = $row['academic_year'];
+                    $selected = ($year == $selected_year) ? 'selected' : '';
+                    echo "<option value='$year' $selected>$year</option>";
+                }
+                ?>
             </select>
         </form>
     </div>
@@ -89,34 +96,78 @@ $result = $conn->query($sql);
                 <tr>
                     <th>รหัสคำขอ</th>
                     <th>รหัสนิสิต</th>
+                    <th style="width: 150px;">ชื่อนิสิต</th>
                     <th>รหัสอาจารย์</th>
+                    <th style="width: 150px;">ชื่ออาจารย์</th>
                     <th>หัวข้อวิทยานิพนธ์ (ไทย)</th>
                     <th>หัวข้อวิทยานิพนธ์ (อังกฤษ)</th>
                     <th>ปีการศึกษา</th>
                     <th>วันที่ร้องขอ</th>
+                    <th style="width: 80px;">ถูกปฏิเสธโดย</th>
                 </tr>
             </thead>
             <tbody>
                 <?php
                 if ($result->num_rows > 0) {
                     while ($row = $result->fetch_assoc()) {
-                        $date = date('d/m/Y', strtotime($row['time_stamp'])); // แปลง timestamp
+                        $date = date('d/m/Y', strtotime($row['time_stamp']));
+
+                        // แปลง JSON string เป็น array ใน PHP
+                        $student_ids = json_decode($row['student_id'], true); // ได้ array เช่น ["65310000", "65310001"]
+                        $student_names = [];
+
+                        // ดึงชื่อนิสิตจากตาราง student
+                        if (!empty($student_ids)) {
+                            $ids = "'" . implode("','", $student_ids) . "'"; // แปลงเป็น "'65310000','65310001'"
+                            $name_query = "SELECT CONCAT(student_first_name, ' ', student_last_name) AS full_name 
+                                           FROM student 
+                                           WHERE student_id IN ($ids)";
+                            $name_result = $conn->query($name_query);
+
+                            while ($name_row = $name_result->fetch_assoc()) {
+                                $student_names[] = $name_row['full_name'];
+                            }
+                        }
+
+                        // รวมชื่อนิสิต
+                        $student_full_name = !empty($student_names) ? implode(',<br>', $student_names) : 'ไม่พบชื่อนิสิต';
+
+                        // จัดการกรณี advisor_full_name เป็น NULL
+                        $advisor_full_name = $row['advisor_full_name'] ?? 'ไม่พบชื่ออาจารย์';
+
+                        // ตรวจสอบว่าใครเป็นคนปฏิเสธ
+                        $rejected_by = [];
+                        if ($row['partner_accepted'] == 2) {
+                            $rejected_by[] = 'คู่ของนิสิต';
+                        }
+                        if ($row['is_admin_approved'] == 2) {
+                            $rejected_by[] = 'แอดมิน';
+                        }
+                        if ($row['is_advisor_approved'] == 2) {
+                            $rejected_by[] = 'อาจารย์';
+                        }
+                        $rejected_by_text = !empty($rejected_by) ? implode(', ', $rejected_by) : 'ไม่ทราบ';
+
                         echo "<tr>
                                 <td>{$row['advisor_request_id']}</td>
                                 <td>{$row['student_id']}</td>
+                                <td>{$student_full_name}</td>
                                 <td>{$row['advisor_id']}</td>
+                                <td>{$advisor_full_name}</td>
                                 <td>{$row['thesis_topic_thai']}</td>
                                 <td>{$row['thesis_topic_eng']}</td>
                                 <td>{$row['academic_year']}</td>
                                 <td>{$date}</td>
+                                <td>{$rejected_by_text}</td>
                               </tr>";
                     }
                 } else {
-                    echo "<tr><td colspan='7' class='no-data'>ไม่มีคำขอที่ถูกปฎิเสธ</td></tr>";
+                    echo "<tr><td colspan='10' class='no-data'>ไม่มีคำขอที่ถูกปฏิเสธ</td></tr>";
                 }
                 ?>
             </tbody>
         </table>
     </div>
 </body>
+
 </html>
