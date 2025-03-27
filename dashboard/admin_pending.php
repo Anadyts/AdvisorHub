@@ -2,6 +2,7 @@
 session_start();
 require('../server.php');
 include('../components/navbar.php');
+
 if (isset($_POST['logout'])) {
     session_destroy();
     header('location: /AdvisorHub/login');
@@ -21,16 +22,31 @@ if (isset($_POST['profile'])) {
     exit();
 }
 
+// ดึงค่าปีการศึกษาจาก GET
+$selected_year = isset($_GET['academic_year']) ? $_GET['academic_year'] : null;
+
+// ดึงปีการศึกษาที่มีอยู่ทั้งหมดจากฐานข้อมูล
+$yearQuery = "SELECT DISTINCT academic_year FROM advisor_request ORDER BY academic_year DESC";
+$yearResult = $conn->query($yearQuery);
+
+// คิวรีข้อมูล โดยจะกรองปีการศึกษาถ้ามีค่า GET
 $sql = "SELECT 
             advisor_request_id, 
             student_id, 
             thesis_topic_thai, 
             thesis_topic_eng, 
+            academic_year,
             time_stamp 
         FROM advisor_request 
         WHERE is_admin_approved = 0 AND partner_accepted != 2 AND is_advisor_approved != 2";
-$result = $conn->query($sql);
 
+if ($selected_year != null) {
+    $sql .= " AND academic_year = $selected_year";
+}
+
+$sql .= " ORDER BY academic_year DESC";
+
+$result = $conn->query($sql);
 ?>
 
 <!DOCTYPE html>
@@ -44,7 +60,26 @@ $result = $conn->query($sql);
 </head>
 <body>
     <?php renderNavbar(allowedPages: ['home', 'advisor','statistics']) ?>
+    
     <h2 class="header">รายละเอียดคำขอจากนิสิตที่รอดำเนินการ</h2>
+
+    <!-- ฟอร์มเลือกปีการศึกษา -->
+    <div class="filter-container">
+        <form method="GET" class="filter-form">
+            <label for="academic_year">ปีการศึกษา:</label>
+            <select name="academic_year" id="academic_year" onchange="this.form.submit()">
+                 <option value="">ทั้งหมด</option>
+                 <?php
+                 while ($row = $yearResult->fetch_assoc()) {
+                     $year = $row['academic_year'];
+                     $selected = ($year == $selected_year) ? 'selected' : '';
+                     echo "<option value='$year' $selected>$year</option>";
+                 }
+                 ?>
+            </select>
+        </form>
+    </div>
+
     <div class="table-container">
         <table>
             <thead>
@@ -61,7 +96,7 @@ $result = $conn->query($sql);
                 if ($result->num_rows > 0) {
                     while ($row = $result->fetch_assoc()) {
                         // แปลง timestamp เป็นรูปแบบวันที่ภาษาไทย
-                        $date = $row['time_stamp'];
+                        $date = date('d/m/Y', strtotime($row['time_stamp']));
                         echo "<tr>
                                 <td>{$row['advisor_request_id']}</td>
                                 <td>{$row['student_id']}</td>
