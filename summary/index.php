@@ -179,13 +179,15 @@ $result = $conn->query($sql);
                     $total_pair += $pair;
                     $total_thesis += $total;
                     echo "<tr>
-                            <td>{$index}</td>
-                            <td style='text-align: left;'>{$row["name"]}</td>
-                            <td class='highlight'>{$row["students"]}</td>
-                            <td>{$row["single"]}</td>
-                            <td>{$row["pair"]}</td>
-                            <td>{$row["total"]}</td>
-                          </tr>";
+                    <td>{$index}</td>
+                    <td style='text-align: left;'>
+                        <a href='amount.php?advisor_id={$row["advisor_id"]}' class='advisor-link'>{$row["name"]}</a>
+                    </td>
+                    <td class='highlight'>{$row["students"]}</td>
+                    <td>{$row["single"]}</td>
+                    <td>{$row["pair"]}</td>
+                    <td>{$row["total"]}</td>
+                        </tr>";
                     $index++;
                 }
             }
