@@ -31,6 +31,11 @@ $selected_year = isset($_GET['academic_year']) ? $_GET['academic_year'] : null;
 $yearQuery = "SELECT DISTINCT academic_year FROM advisor_request ORDER BY academic_year DESC";
 $yearResult = $conn->query($yearQuery);
 
+// ดึงรายชื่ออาจารย์ทั้งหมดสำหรับตัวเลือกใน select box
+$advisorQuery = "SELECT DISTINCT CONCAT(advisor_first_name, ' ', advisor_last_name) AS advisor_full_name 
+                 FROM advisor ORDER BY advisor_first_name, advisor_last_name";
+$advisorResult = $conn->query($advisorQuery);
+
 // คิวรีข้อมูลหลัก โดย JOIN กับตาราง advisor และดึงสถานะการปฏิเสธ
 $sql = "SELECT 
             ar.advisor_request_id, 
@@ -66,7 +71,105 @@ $result = $conn->query($sql);
     <title>Rejected Requests</title>
     <link rel="icon" href="../Logo.png">
     <link rel="stylesheet" href="style/rejected_request.css">
+    <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
 </head>
+
+<style>
+    .advisor-filter-container {
+        max-width: 1000px;
+        margin: 0 auto 40px auto;
+        padding: 30px;
+        background: #fff;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+    }
+
+    .advisor-filter-container h6 {
+        font-size: 18px;
+        font-weight: bold;
+        color: #410690;
+        margin: 0 0 15px 0;
+        text-align: left;
+    }
+
+    .advisor-filter-container .ts-wrapper {
+        position: relative;
+    }
+
+    .advisor-filter-container .ts-wrapper .ts-control {
+        border: 2px solid #999 !important;
+        border-radius: 8px;
+        padding: 10px;
+        background-color: #fff;
+        font-size: 16px;
+        min-height: 40px;
+        transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+    .advisor-filter-container .ts-control:not(:empty) {
+        border-color: #410690 !important;
+    }
+
+    .advisor-filter-container .ts-control:focus-within {
+        border-color: #6a11cb !important;
+        box-shadow: 0 0 8px rgba(106, 17, 203, 0.3);
+    }
+
+    .advisor-filter-container select {
+        border: 2px solid #999 !important;
+        border-radius: 8px;
+        padding: 10px;
+        background-color: #fff;
+        font-size: 16px;
+        min-height: 40px;
+    }
+
+    .advisor-filter-container .ts-control input {
+        border: none !important;
+        outline: none;
+        background: transparent;
+        color: #666;
+    }
+
+    .advisor-filter-container .item {
+        background-color: #410690;
+        color: #fff;
+        border-radius: 4px;
+        padding: 4px 8px;
+        margin: 2px;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .advisor-filter-container .item .remove {
+        margin-left: 6px;
+        cursor: pointer;
+        color: #fff;
+        font-weight: bold;
+        font-size: 12px;
+    }
+
+    .advisor-filter-container .ts-dropdown {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #fff;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .advisor-filter-container .option {
+        padding: 10px 15px;
+        font-size: 16px;
+        color: #333;
+        cursor: pointer;
+    }
+
+    .advisor-filter-container .option:hover,
+    .advisor-filter-container .option.active {
+        background-color: #f1f1f1;
+    }
+</style>
 
 <body>
     <?php renderNavbar(allowedPages: ['home', 'advisor', 'statistics']) ?>
@@ -90,6 +193,21 @@ $result = $conn->query($sql);
         </form>
     </div>
 
+    <!-- ตัวกรองชื่ออาจารย์ -->
+    <div class="advisor-filter-container">
+        <h6>กรองชื่ออาจารย์</h6>
+        <select id="select-advisors" multiple data-placeholder="กรองชื่ออาจารย์" class="form-control">
+            <optgroup label="Advisor">
+                <?php
+                while ($row = $advisorResult->fetch_assoc()) {
+                    $advisor_name = htmlspecialchars($row['advisor_full_name'], ENT_QUOTES, 'UTF-8');
+                    echo "<option value='$advisor_name'>$advisor_name</option>";
+                }
+                ?>
+            </optgroup>
+        </select>
+    </div>
+
     <div class="table-container">
         <table>
             <thead>
@@ -106,7 +224,7 @@ $result = $conn->query($sql);
                     <th style="width: 80px;">ถูกปฏิเสธโดย</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="requestTableBody">
                 <?php
                 if ($result->num_rows > 0) {
                     while ($row = $result->fetch_assoc()) {
@@ -168,6 +286,31 @@ $result = $conn->query($sql);
             </tbody>
         </table>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+    <script>
+        new TomSelect("#select-advisors", {
+            plugins: ['remove_button'],
+            create: false,
+            onChange: function(values) {
+                console.log("Selected Advisors:", values);
+                fetch('filter_advisor.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: 'advisors=' + encodeURIComponent(JSON.stringify(values)) +
+                            '&academic_year=' + encodeURIComponent('<?php echo $selected_year ?? ''; ?>') +
+                            '&request_type=rejected' // เพิ่มพารามิเตอร์ระบุประเภทคำขอ
+                    })
+                    .then(response => response.text())
+                    .then(data => {
+                        console.log("Filter Response:", data);
+                        document.getElementById('requestTableBody').innerHTML = data;
+                    });
+            }
+        });
+    </script>
 </body>
 
 </html>
