@@ -130,6 +130,11 @@ $result = $conn->query($sql);
                 transform: translateY(0);
             }
         }
+
+        a{
+            text-decoration: none;
+            color: black;
+        }
     </style>
     <!-- เพิ่มฟอนต์ Prompt จาก Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;700&display=swap" rel="stylesheet">
