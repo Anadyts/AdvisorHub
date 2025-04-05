@@ -24,42 +24,19 @@ if (isset($_POST['profile'])) {
     exit();
 }
 
-// ดึงค่าปีการศึกษาจาก GET
-$selected_year = isset($_GET['academic_year']) ? $_GET['academic_year'] : null;
+// ดึงปีการศึกษาและรายชื่ออาจารย์
+$yearResult = $conn->query("SELECT DISTINCT academic_year FROM advisor_request ORDER BY academic_year DESC");
+$advisorResult = $conn->query("SELECT advisor_id, CONCAT(advisor_first_name, ' ', advisor_last_name) AS name FROM advisor");
 
-// ดึงปีการศึกษาที่มีอยู่ทั้งหมดจากฐานข้อมูล
-$yearQuery = "SELECT DISTINCT academic_year FROM advisor_request ORDER BY academic_year DESC";
-$yearResult = $conn->query($yearQuery);
-
-// ดึงรายชื่ออาจารย์ทั้งหมดสำหรับตัวเลือกใน select box
-$advisorQuery = "SELECT DISTINCT CONCAT(advisor_first_name, ' ', advisor_last_name) AS advisor_full_name 
-                 FROM advisor ORDER BY advisor_first_name, advisor_last_name";
-$advisorResult = $conn->query($advisorQuery);
-
-// คิวรีข้อมูลหลัก โดย JOIN กับตาราง advisor และดึงสถานะการปฏิเสธ
-$sql = "SELECT 
-            ar.advisor_request_id, 
-            ar.student_id,  
-            ar.advisor_id,
-            CONCAT(a.advisor_first_name, ' ', a.advisor_last_name) AS advisor_full_name,
-            ar.thesis_topic_thai, 
-            ar.thesis_topic_eng, 
-            ar.academic_year,
-            ar.time_stamp,
-            ar.partner_accepted,
-            ar.is_admin_approved,
-            ar.is_advisor_approved
-        FROM advisor_request ar
-        LEFT JOIN advisor a ON ar.advisor_id = a.advisor_id
-        WHERE (ar.partner_accepted = 2 OR ar.is_admin_approved = 2 OR ar.is_advisor_approved = 2)";
-
-if ($selected_year != null) {
-    $sql .= " AND ar.academic_year = $selected_year";
+function getAdvisorOptions($conn)
+{
+    $res = $conn->query("SELECT advisor_id, CONCAT(advisor_first_name, ' ', advisor_last_name) AS name FROM advisor");
+    $html = '';
+    while ($row = $res->fetch_assoc()) {
+        $html .= "<option value='{$row['advisor_id']}'>{$row['name']}</option>";
+    }
+    return $html;
 }
-
-$sql .= " ORDER BY ar.academic_year DESC";
-
-$result = $conn->query($sql);
 ?>
 
 <!DOCTYPE html>
@@ -75,241 +52,295 @@ $result = $conn->query($sql);
 </head>
 
 <style>
-    .advisor-filter-container {
-        max-width: 1000px;
-        margin: 0 auto 40px auto;
-        padding: 30px;
-        background: #fff;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        border-radius: 8px;
-    }
+        .search-form {
+            max-width: 1500px;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px auto;
+            font-family: sans-serif;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
 
-    .advisor-filter-container h6 {
-        font-size: 18px;
-        font-weight: bold;
-        color: #410690;
-        margin: 0 0 15px 0;
-        text-align: left;
-    }
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
 
-    .advisor-filter-container .ts-wrapper {
-        position: relative;
-    }
+        .form-row label {
+            white-space: nowrap;
+        }
 
-    .advisor-filter-container .ts-wrapper .ts-control {
-        border: 2px solid #999 !important;
-        border-radius: 8px;
-        padding: 10px;
-        background-color: #fff;
-        font-size: 16px;
-        min-height: 40px;
-        transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    }
+        .form-row select,
+        .form-row input[type="text"] {
+            padding: 6px;
+            font-size: 1rem;
+        }
 
-    .advisor-filter-container .ts-control:not(:empty) {
-        border-color: #410690 !important;
-    }
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
 
-    .advisor-filter-container .ts-control:focus-within {
-        border-color: #6a11cb !important;
-        box-shadow: 0 0 8px rgba(106, 17, 203, 0.3);
-    }
+        .form-actions input,
+        .form-actions select {
+            flex: 1;
+            padding: 13px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
 
-    .advisor-filter-container select {
-        border: 2px solid #999 !important;
-        border-radius: 8px;
-        padding: 10px;
-        background-color: #fff;
-        font-size: 16px;
-        min-height: 40px;
-    }
+        .form-actions button {
+            padding: 8px 16px;
+            font-size: 1rem;
+            background-color: rgb(84, 15, 152);
+            border: none;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+        }
 
-    .advisor-filter-container .ts-control input {
-        border: none !important;
-        outline: none;
-        background: transparent;
-        color: #666;
-    }
-
-    .advisor-filter-container .item {
-        background-color: #410690;
-        color: #fff;
-        border-radius: 4px;
-        padding: 4px 8px;
-        margin: 2px;
-        display: inline-flex;
-        align-items: center;
-    }
-
-    .advisor-filter-container .item .remove {
-        margin-left: 6px;
-        cursor: pointer;
-        color: #fff;
-        font-weight: bold;
-        font-size: 12px;
-    }
-
-    .advisor-filter-container .ts-dropdown {
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        background-color: #fff;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        max-height: 200px;
-        overflow-y: auto;
-    }
-
-    .advisor-filter-container .option {
-        padding: 10px 15px;
-        font-size: 16px;
-        color: #333;
-        cursor: pointer;
-    }
-
-    .advisor-filter-container .option:hover,
-    .advisor-filter-container .option.active {
-        background-color: #f1f1f1;
-    }
+        .form-actions button:hover {
+            background-color: rgb(87, 13, 122);
+        }
 </style>
 
 <body>
     <?php renderNavbar(allowedPages: ['home', 'advisor', 'statistics']) ?>
-
+    <div class="container">
     <h2 class="header">รายละเอียดคำขอจากนิสิตที่ถูกปฏิเสธ</h2>
 
-    <!-- ฟอร์มเลือกปีการศึกษา -->
-    <div class="filter-container">
-        <form method="GET" class="filter-form">
-            <label for="academic_year">ปีการศึกษา:</label>
-            <select name="academic_year" id="academic_year" onchange="this.form.submit()">
-                <option value="">ทั้งหมด</option>
-                <?php
-                while ($row = $yearResult->fetch_assoc()) {
-                    $year = $row['academic_year'];
-                    $selected = ($year == $selected_year) ? 'selected' : '';
-                    echo "<option value='$year' $selected>$year</option>";
-                }
-                ?>
-            </select>
+        <!-- ฟอร์มค้นหา -->
+        <form method="GET" action="" class="search-form">
+            <h3>ค้นหาข้อมูลคำร้องขอที่ถูกปฏิเสธ</h3>
+
+            <!-- แถวที่ 1 -->
+            <div class="form-row">
+                <label><input type="radio" name="search_type" value="all" checked> ค้นหาทั้งหมด</label>
+                <label><input type="radio" name="search_type" value="requester_id"> รหัสผู้ส่งคำขอ</label>
+                <label><input type="radio" name="search_type" value="student_id"> รหัสนิสิต</label>
+                <label><input type="radio" name="search_type" value="student_name"> ชื่อ-นามสกุลนิสิต</label>
+                <label><input type="radio" name="search_type" value="thesis_topic"> หัวข้อวิทยานิพนธ์</label>
+                <label><input type="radio" name="search_type" value="advisor_id"> ชื่ออาจารย์</label>
+
+                <label>
+                    ปีการศึกษา:
+                    <select name="academic_year">
+                        <option value="all">ทั้งหมด</option>
+                        <?php while ($row = $yearResult->fetch_assoc()): ?>
+                            <option value="<?= $row['academic_year'] ?>"><?= $row['academic_year'] ?></option>
+                        <?php endwhile; ?>
+                    </select>
+                </label>
+            </div>
+
+            <!-- แถวที่ 2 -->
+            <div class="form-actions">
+                <input type="text" name="search_input" placeholder="กรอกข้อมูลค้นหา" id="search_input">
+                <select name="advisor_select" id="advisor_select" style="display: none;">
+                    <option value="">-- เลือกอาจารย์ --</option>
+                    <?= getAdvisorOptions($conn) ?>
+                </select>
+                <button type="submit">ค้นหา</button>
+            </div>
         </form>
-    </div>
 
-    <!-- ตัวกรองชื่ออาจารย์ -->
-    <div class="advisor-filter-container">
-        <h6>กรองชื่ออาจารย์</h6>
-        <select id="select-advisors" multiple data-placeholder="กรองชื่ออาจารย์" class="form-control">
-            <optgroup label="Advisor">
-                <?php
-                while ($row = $advisorResult->fetch_assoc()) {
-                    $advisor_name = htmlspecialchars($row['advisor_full_name'], ENT_QUOTES, 'UTF-8');
-                    echo "<option value='$advisor_name'>$advisor_name</option>";
-                }
-                ?>
-            </optgroup>
-        </select>
-    </div>
+        <?php
+        if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET['search_type'])) {
+            $searchType = $_GET['search_type'] ?? 'all';
+            $searchInput = trim($_GET['search_input'] ?? '');
+            $advisorSelect = $_GET['advisor_select'] ?? '';
+            $academicYear = $_GET['academic_year'] ?? 'all';
 
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>รหัสคำขอ</th>
-                    <th>รหัสนิสิต</th>
-                    <th style="width: 150px;">ชื่อนิสิต</th>
-                    <th>รหัสอาจารย์</th>
-                    <th style="width: 150px;">ชื่ออาจารย์</th>
-                    <th>หัวข้อวิทยานิพนธ์ (ไทย)</th>
-                    <th>หัวข้อวิทยานิพนธ์ (อังกฤษ)</th>
-                    <th>ปีการศึกษา</th>
-                    <th>วันที่ร้องขอ</th>
-                    <th style="width: 80px;">ถูกปฏิเสธโดย</th>
-                </tr>
-            </thead>
-            <tbody id="requestTableBody">
-                <?php
-                if ($result->num_rows > 0) {
-                    while ($row = $result->fetch_assoc()) {
-                        $date = date('d/m/Y', strtotime($row['time_stamp']));
+            // เงื่อนไขพื้นฐานสำหรับคำขอที่ถูกปฏิเสธ
+            $where = "(ar.partner_accepted = 2 OR ar.is_admin_approved = 2 OR ar.is_advisor_approved = 2)";
 
-                        // แปลง JSON string เป็น array ใน PHP
-                        $student_ids = json_decode($row['student_id'], true); // ได้ array เช่น ["65310000", "65310001"]
-                        $student_names = [];
+            // เพิ่มเงื่อนไขปีการศึกษา
+            if ($academicYear != 'all') {
+                $where .= " AND ar.academic_year = '$academicYear'";
+            }
 
-                        // ดึงชื่อนิสิตจากตาราง student
-                        if (!empty($student_ids)) {
-                            $ids = "'" . implode("','", $student_ids) . "'"; // แปลงเป็น "'65310000','65310001'"
-                            $name_query = "SELECT CONCAT(student_first_name, ' ', student_last_name) AS full_name 
-                                           FROM student 
-                                           WHERE student_id IN ($ids)";
-                            $name_result = $conn->query($name_query);
+            // ตัวแปรเพื่อตรวจสอบว่ามีข้อมูลค้นหาหรือไม่
+            $hasSearchInput = false;
 
-                            while ($name_row = $name_result->fetch_assoc()) {
-                                $student_names[] = $name_row['full_name'];
-                            }
-                        }
-
-                        // รวมชื่อนิสิต
-                        $student_full_name = !empty($student_names) ? implode(',<br>', $student_names) : 'ไม่พบชื่อนิสิต';
-
-                        // จัดการกรณี advisor_full_name เป็น NULL
-                        $advisor_full_name = $row['advisor_full_name'] ?? 'ไม่พบชื่ออาจารย์';
-
-                        // ตรวจสอบว่าใครเป็นคนปฏิเสธ
-                        $rejected_by = [];
-                        if ($row['partner_accepted'] == 2) {
-                            $rejected_by[] = 'คู่ของนิสิต';
-                        }
-                        if ($row['is_admin_approved'] == 2) {
-                            $rejected_by[] = 'แอดมิน';
-                        }
-                        if ($row['is_advisor_approved'] == 2) {
-                            $rejected_by[] = 'อาจารย์';
-                        }
-                        $rejected_by_text = !empty($rejected_by) ? implode(', ', $rejected_by) : 'ไม่ทราบ';
-
-                        echo "<tr>
-                                <td>{$row['advisor_request_id']}</td>
-                                <td>{$row['student_id']}</td>
-                                <td>{$student_full_name}</td>
-                                <td>{$row['advisor_id']}</td>
-                                <td>{$advisor_full_name}</td>
-                                <td>{$row['thesis_topic_thai']}</td>
-                                <td>{$row['thesis_topic_eng']}</td>
-                                <td>{$row['academic_year']}</td>
-                                <td>{$date}</td>
-                                <td>{$rejected_by_text}</td>
-                              </tr>";
+            // ปรับเงื่อนไขตามประเภทการค้นหา
+            switch ($searchType) {
+                case 'requester_id':
+                    if (!empty($searchInput)) {
+                        $where .= " AND ar.requester_id = '$searchInput'";
+                        $hasSearchInput = true;
                     }
-                } else {
-                    echo "<tr><td colspan='10' class='no-data'>ไม่มีคำขอที่ถูกปฏิเสธ</td></tr>";
-                }
-                ?>
-            </tbody>
-        </table>
-    </div>
+                    break;
+                case 'student_id':
+                    if (!empty($searchInput)) {
+                        $where .= " AND JSON_CONTAINS(ar.student_id, '\"$searchInput\"')";
+                        $hasSearchInput = true;
+                    }
+                    break;
+                case 'student_name':
+                    if (!empty($searchInput)) {
+                        $where .= " AND EXISTS (
+                            SELECT 1 FROM student s 
+                            WHERE JSON_CONTAINS(ar.student_id, CONCAT('\"', s.student_id, '\"'))
+                            AND CONCAT(s.student_first_name, ' ', s.student_last_name) LIKE '%$searchInput%'
+                        )";
+                        $hasSearchInput = true;
+                    }
+                    break;
+                case 'thesis_topic':
+                    if (!empty($searchInput)) {
+                        $where .= " AND (ar.thesis_topic_thai LIKE '%$searchInput%' OR ar.thesis_topic_eng LIKE '%$searchInput%')";
+                        $hasSearchInput = true;
+                    }
+                    break;
+                case 'advisor_id':
+                    if (!empty($advisorSelect)) {
+                        $where .= " AND ar.advisor_id = '$advisorSelect'";
+                        $hasSearchInput = true;
+                    }
+                    break;
+                case 'all':
+                    $hasSearchInput = true; // กรณี "ทั้งหมด" ไม่ต้องกรอกข้อมูลก็แสดงได้
+                    break;
+                default:
+                    break;
+            }
 
+            // ถ้าไม่ใช่ "all" และไม่มีข้อมูลค้นหา ให้แสดง "ไม่พบข้อมูล"
+            if ($searchType !== 'all' && !$hasSearchInput) {
+                echo '<h3>ผลการค้นหา</h3>';
+                echo '<table border="1" cellpadding="5" cellspacing="0" class="table-container">';
+                echo '<thead>';
+                echo '<tr>';
+                echo '<th>รหัสคำขอ</th><th>รหัสนิสิต</th><th>ชื่อนิสิต</th><th>รหัสอาจารย์</th><th>ชื่ออาจารย์</th><th>หัวข้อวิทยานิพนธ์ (ไทย)</th><th>หัวข้อวิทยานิพนธ์ (อังกฤษ)</th><th>ปีการศึกษา</th><th>วันที่ร้องขอ</th><th>ถูกปฏิเสธโดย</th>';
+                echo '</tr>';
+                echo '</thead>';
+                echo '<tbody>';
+                echo '<tr><td colspan="10" style="text-align:center; color: gray;">ไม่พบข้อมูล</td></tr>';
+                echo '</tbody>';
+                echo '</table>';
+            } else {
+                // Query หลัก
+                $query = "SELECT 
+                    ar.advisor_request_id,
+                    ar.student_id,  
+                    a.advisor_id,
+                    CONCAT(a.advisor_first_name, ' ', a.advisor_last_name) AS advisor_name,
+                    ar.thesis_topic_thai,
+                    ar.thesis_topic_eng,
+                    ar.academic_year,
+                    ar.time_stamp,
+                    ar.partner_accepted,
+                    ar.is_admin_approved,
+                    ar.is_advisor_approved
+                FROM advisor_request ar
+                LEFT JOIN advisor a ON ar.advisor_id = a.advisor_id
+                WHERE $where
+                ORDER BY ar.academic_year DESC";
+
+                $result = $conn->query($query);
+        ?>
+
+                <h3>ผลการค้นหา</h3>
+                <table border="1" cellpadding="5" cellspacing="0" class="table-container">
+                    <thead>
+                        <tr>
+                            <th>รหัสคำขอ</th>
+                            <th>รหัสนิสิต</th>
+                            <th>ชื่อนิสิต</th>
+                            <th>รหัสอาจารย์</th>
+                            <th>ชื่ออาจารย์</th>
+                            <th>หัวข้อวิทยานิพนธ์ (ไทย)</th>
+                            <th>หัวข้อวิทยานิพนธ์ (อังกฤษ)</th>
+                            <th>ปีการศึกษา</th>
+                            <th>วันที่ร้องขอ</th>
+                            <th>ถูกปฏิเสธโดย</th>
+                        </tr>
+                    </thead>
+                    <tbody id="requestTableBody">
+                        <?php if ($result && $result->num_rows > 0): ?>
+                            <?php while ($row = $result->fetch_assoc()): ?>
+                                <?php
+                                $studentIds = json_decode($row['student_id'] ?? '[]', true);
+                                $studentIdText = is_array($studentIds) ? implode(", ", $studentIds) : '';
+
+                                $studentNames = [];
+                                foreach ($studentIds as $sid) {
+                                    $studentQuery = $conn->query("SELECT student_first_name, student_last_name FROM student WHERE student_id = '$sid'");
+                                    if ($studentRow = $studentQuery->fetch_assoc()) {
+                                        $studentNames[] = $studentRow['student_first_name'] . ' ' . $studentRow['student_last_name'];
+                                    }
+                                }
+                                $studentNameText = implode("<br>", $studentNames);
+
+                                $date = date('d/m/Y', strtotime($row['time_stamp']));
+                                $rejected_by = [];
+                                if ($row['partner_accepted'] == 2) {
+                                    $rejected_by[] = 'คู่ของนิสิต';
+                                }
+                                if ($row['is_admin_approved'] == 2) {
+                                    $rejected_by[] = 'แอดมิน';
+                                }
+                                if ($row['is_advisor_approved'] == 2) {
+                                    $rejected_by[] = 'อาจารย์';
+                                }
+                                $rejected_by_text = !empty($rejected_by) ? implode(', ', $rejected_by) : 'ไม่ทราบ';
+                                ?>
+                                <tr>
+                                    <td><?= $row['advisor_request_id'] ?></td>
+                                    <td><?= $studentIdText ?></td>
+                                    <td><?= $studentNameText ?></td>
+                                    <td><?= $row['advisor_id'] ?></td>
+                                    <td><?= $row['advisor_name'] ?></td>
+                                    <td><?= $row['thesis_topic_thai'] ?></td>
+                                    <td><?= $row['thesis_topic_eng'] ?></td>
+                                    <td><?= $row['academic_year'] ?></td>
+                                    <td><?= $date ?></td>
+                                    <td><?= $rejected_by_text ?></td>
+                                </tr>
+                            <?php endwhile; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="10" style="text-align:center; color: gray;">ไม่พบข้อมูล</td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+
+        <?php
+            }
+        }
+        ?>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
     <script>
-        new TomSelect("#select-advisors", {
-            plugins: ['remove_button'],
-            create: false,
-            onChange: function(values) {
-                console.log("Selected Advisors:", values);
-                fetch('filter_advisor.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                        body: 'advisors=' + encodeURIComponent(JSON.stringify(values)) +
-                            '&academic_year=' + encodeURIComponent('<?php echo $selected_year ?? ''; ?>') +
-                            '&request_type=rejected' // เพิ่มพารามิเตอร์ระบุประเภทคำขอ
-                    })
-                    .then(response => response.text())
-                    .then(data => {
-                        console.log("Filter Response:", data);
-                        document.getElementById('requestTableBody').innerHTML = data;
-                    });
+    const radios = document.querySelectorAll('input[name="search_type"]');
+    const input = document.getElementById('search_input');
+    const select = document.getElementById('advisor_select');
+
+    radios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            if (radio.value === 'advisor_id') {
+                input.style.display = 'none';
+                select.style.display = 'block';
+            } else if (radio.value === 'all') {
+                input.style.display = 'none';
+                select.style.display = 'none';
+            } else {
+                input.style.display = 'block';
+                select.style.display = 'none';
             }
         });
+    });
+
+    window.addEventListener("DOMContentLoaded", () => {
+        const checked = document.querySelector('input[name="search_type"]:checked');
+        checked.dispatchEvent(new Event('change'));
+    });
     </script>
 </body>
 
