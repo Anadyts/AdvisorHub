@@ -43,10 +43,15 @@ if (isset($_POST['profile'])) {
     <div class="container">
         <!-- กราฟแสดงจำนวนนิสิตที่มีอาจารย์ที่ปรึกษาและยังไม่มีอาจารย์ที่ปรึกษา -->
         <?php
-        $sql_with_advisor = "SELECT COUNT(*) AS students_with_advisor
-                            FROM advisor_request 
-                            WHERE is_advisor_approved = 1 
-                            AND is_admin_approved = 1";
+        $sql_with_advisor = "SELECT SUM(CASE 
+                WHEN ar.is_even = 0 THEN 1 
+                WHEN ar.is_even = 1 THEN JSON_LENGTH(ar.student_id) 
+                ELSE 0 
+            END) AS students_with_advisor
+        FROM advisor_request ar
+        WHERE ar.is_advisor_approved = 1 
+        AND ar.is_admin_approved = 1
+        AND ar.partner_accepted = 1";
         $result_with_advisor = $conn->query($sql_with_advisor);
         $students_with_advisor = $result_with_advisor->fetch_assoc()['students_with_advisor'];
 
@@ -54,7 +59,7 @@ if (isset($_POST['profile'])) {
                                FROM student s 
                                LEFT JOIN advisor_request ar ON JSON_CONTAINS(ar.student_id, CONCAT('\"', s.student_id, '\"'))
                                WHERE ar.advisor_request_id IS NULL 
-                               OR (ar.student_id IS NOT NULL AND ar.is_advisor_approved = 0 AND ar.is_admin_approved = 0)";
+                               OR (ar.student_id IS NOT NULL AND ar.is_advisor_approved = 0 OR ar.is_admin_approved = 0)";
         $result_without_advisor = $conn->query($sql_without_advisor);
         $students_without_advisor = $result_without_advisor->fetch_assoc()['students_without_advisor'];
         ?>

@@ -45,7 +45,8 @@ $sql = "SELECT
             ar.thesis_topic_thai, 
             ar.thesis_topic_eng, 
             ar.academic_year,
-            ar.time_stamp 
+            ar.time_stamp,
+            ar.is_even
         FROM advisor_request ar
         LEFT JOIN advisor a ON ar.advisor_id = a.advisor_id
         WHERE ar.is_advisor_approved = 0 AND ar.partner_accepted != 2 AND ar.is_admin_approved != 2";
@@ -189,7 +190,7 @@ $result = $conn->query($sql);
         </form>
     </div>
 
-    <!-- ตัวกรองชื่ออาจารย์ -->
+    <!-- ตัวกรองชื่ออาจารย์, ประเภทการทำ, และสาขา -->
     <div class="advisor-filter-container">
         <h6>กรองชื่ออาจารย์</h6>
         <select id="select-advisors" multiple data-placeholder="กรองชื่ออาจารย์" class="form-control">
@@ -201,6 +202,18 @@ $result = $conn->query($sql);
                 }
                 ?>
             </optgroup>
+        </select>
+
+        <h6 style="margin-top: 20px;">กรองประเภทการทำ</h6>
+        <select id="select-is-even" multiple data-placeholder="เลือกประเภท (เดี่ยว/คู่)" class="form-control">
+            <option value="0">เดี่ยว</option>
+            <option value="1">คู่</option>
+        </select>
+
+        <h6 style="margin-top: 20px;">กรองสาขา</h6>
+        <select id="select-department" multiple data-placeholder="เลือกสาขา" class="form-control">
+            <option value="Information Technology">Information Technology</option>
+            <option value="Computer Science">Computer Science</option>
         </select>
     </div>
 
@@ -263,27 +276,56 @@ $result = $conn->query($sql);
 
     <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
     <script>
-        new TomSelect("#select-advisors", {
+        // ตัวกรองชื่ออาจารย์
+        const advisorSelect = new TomSelect("#select-advisors", {
             plugins: ['remove_button'],
             create: false,
-            onChange: function(values) {
-                console.log("Selected Advisors:", values);
-                fetch('advisors.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                        body: 'advisors=' + encodeURIComponent(JSON.stringify(values)) +
-                            '&academic_year=' + encodeURIComponent('<?php echo $selected_year ?? ''; ?>') +
-                            '&advisor_pending=1' // บอกว่าเป็นการกรองสำหรับ Advisor Pending
-                    })
-                    .then(response => response.text())
-                    .then(data => {
-                        console.log("Filter Response:", data);
-                        document.getElementById('requestTableBody').innerHTML = data;
-                    });
-            }
         });
+
+        // ตัวกรองประเภทการทำ (เดี่ยว/คู่)
+        const isEvenSelect = new TomSelect("#select-is-even", {
+            plugins: ['remove_button'],
+            create: false,
+        });
+
+        // ตัวกรองสาขา
+        const departmentSelect = new TomSelect("#select-department", {
+            plugins: ['remove_button'],
+            create: false,
+        });
+
+        // ฟังก์ชันกรองเมื่อมีการเปลี่ยนแปลงในตัวกรองใดตัวกรองหนึ่ง
+        function filterTable() {
+            const advisors = advisorSelect.items;
+            const isEven = isEvenSelect.items;
+            const departments = departmentSelect.items;
+
+            console.log("Selected Advisors:", advisors);
+            console.log("Selected is_even:", isEven);
+            console.log("Selected Departments:", departments);
+
+            fetch('advisors.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: 'advisors=' + encodeURIComponent(JSON.stringify(advisors)) +
+                        '&academic_year=' + encodeURIComponent('<?php echo $selected_year ?? ''; ?>') +
+                        '&advisor_pending=1' +
+                        '&is_even=' + encodeURIComponent(JSON.stringify(isEven)) +
+                        '&departments=' + encodeURIComponent(JSON.stringify(departments))
+                })
+                .then(response => response.text())
+                .then(data => {
+                    console.log("Filter Response:", data);
+                    document.getElementById('requestTableBody').innerHTML = data;
+                });
+        }
+
+        // เรียกฟังก์ชันเมื่อมีการเปลี่ยนแปลงในตัวกรอง
+        advisorSelect.on('change', filterTable);
+        isEvenSelect.on('change', filterTable);
+        departmentSelect.on('change', filterTable);
     </script>
 </body>
 
