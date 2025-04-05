@@ -25,7 +25,7 @@ $sql = "SELECT ar.advisor_request_id, ar.student_id, ar.thesis_topic_thai,
                a.advisor_first_name, a.advisor_last_name 
         FROM advisor_request ar
         JOIN advisor a ON ar.advisor_id = a.advisor_id
-        WHERE ar.is_admin_approved = 0 
+        WHERE ar.is_admin_approved = 0 AND ar.partner_accepted = 1 
         ORDER BY ar.time_stamp DESC";
 $stmt = $conn->prepare($sql);
 $stmt->execute();
