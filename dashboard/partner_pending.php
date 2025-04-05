@@ -304,7 +304,7 @@ $result = $conn->query($sql);
             console.log("Selected is_even:", isEven);
             console.log("Selected Departments:", departments);
 
-            fetch('advisors.php', {
+            fetch('filter_advisor.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'

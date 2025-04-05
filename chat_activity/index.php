@@ -16,19 +16,15 @@ if (isset($_POST['logout'])) {
 }
 
 // ตัวแปรสำหรับ pagination
-$messages_per_page = isset($_GET['results_per_page']) ? (int)$_GET['results_per_page'] : 20; // ค่าเริ่มต้น 20
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1; // หน้าเริ่มต้นคือ 1
-$start_from = ($page - 1) * $messages_per_page; // คำนวณจุดเริ่มต้นของข้อมูล
+$messages_per_page = isset($_GET['results_per_page']) ? (int)$_GET['results_per_page'] : 20;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$start_from = ($page - 1) * $messages_per_page;
 
 // รับค่า sortOrder และตัวกรองจาก URL
 $sort_order = isset($_GET['sort_order']) ? $_GET['sort_order'] : 'newest';
-$order_direction = ($sort_order === 'newest') ? 'DESC' : 'ASC'; // กำหนดทิศทางการเรียงลำดับ
+$order_direction = ($sort_order === 'newest') ? 'DESC' : 'ASC';
 $year_filter = isset($_GET['Year']) ? mysqli_real_escape_string($conn, $_GET['Year']) : '';
 $department_filter = isset($_GET['department']) ? mysqli_real_escape_string($conn, $_GET['department']) : '';
-
-// Debug: ตรวจสอบว่าค่า Year และ department ถูกส่งมาหรือไม่
-// echo "Year Filter: " . $year_filter . "<br>";
-// echo "Department Filter: " . $department_filter . "<br>";
 
 // ดึงข้อมูล department ที่ไม่ซ้ำกันจากตาราง student
 $dept_sql = "SELECT DISTINCT student_department FROM student WHERE student_department IS NOT NULL ORDER BY student_department ASC";
@@ -37,6 +33,16 @@ $departments = [];
 if ($dept_result && mysqli_num_rows($dept_result) > 0) {
     while ($row = mysqli_fetch_assoc($dept_result)) {
         $departments[] = $row['student_department'];
+    }
+}
+
+// ดึงข้อมูลปีที่ไม่ซ้ำกันจาก time_stamp ในตาราง messages
+$year_sql = "SELECT DISTINCT YEAR(time_stamp) AS year FROM messages WHERE time_stamp IS NOT NULL ORDER BY year DESC";
+$year_result = mysqli_query($conn, $year_sql);
+$years = [];
+if ($year_result && mysqli_num_rows($year_result) > 0) {
+    while ($row = mysqli_fetch_assoc($year_result)) {
+        $years[] = $row['year'];
     }
 }
 
@@ -56,9 +62,9 @@ if (!empty($department_filter)) {
 }
 $count_result = mysqli_query($conn, $count_sql);
 $total_records = mysqli_fetch_assoc($count_result)['total'];
-$total_pages = ceil($total_records / $messages_per_page); // คำนวณจำนวนหน้าทั้งหมด
+$total_pages = ceil($total_records / $messages_per_page);
 
-// คิวรีหลักเพื่อดึงข้อมูลการสนทนา โดยมีการเรียงลำดับตาม sortOrder และตัวกรอง
+// คิวรีหลักเพื่อดึงข้อมูลการสนทนา
 $sql = "
     SELECT DISTINCT
         s.student_id,
@@ -112,38 +118,29 @@ $end_result = min($start_from + $messages_per_page, $total_records);
     <script src="assets/js/index.js" defer></script>
     <link rel="icon" href="../Logo.png">
     <script>
-        // ส่งค่า messages_per_page จาก PHP ไปยัง JavaScript
         const messagesPerPage = <?php echo json_encode($messages_per_page); ?>;
     </script>
 </head>
 
 <body>
     <?php
-    // แสดง navbar ตามบทบาทของผู้ใช้
-    if (isset($_SESSION['username']) && $_SESSION['role'] != 'admin') {
-        renderNavbar(allowedPages: ['home', 'advisor', 'inbox', 'statistics', 'Teams']);
-    } elseif (isset($_SESSION['username']) && $_SESSION['role'] == 'admin') {
+    if (isset($_SESSION['username']) && $_SESSION['role'] == 'admin') {
         renderNavbar(allowedPages: ['home', 'advisor', 'statistics']);
-    } else {
-        renderNavbar(allowedPages: ['home', 'login', 'advisor', 'statistics']);
     }
     ?>
     <div class="container">
         <h1>Admin Chat Management</h1>
-        <!-- เพิ่มฟอร์มเพื่อส่งข้อมูลตัวกรอง -->
         <form method="GET" action="">
             <div class="search-filter">
                 <input type="text" id="searchInput" placeholder="🔍 Search by user..." onkeyup="filterTable()">
-                <!-- Dropdown สำหรับเลือกการเรียงลำดับ คงค่าเดิมตาม sortOrder -->
                 <select id="sortOrder" name="sort_order" onchange="this.form.submit()">
                     <option value="newest" <?php echo $sort_order === 'newest' ? 'selected' : ''; ?>>Newest</option>
                     <option value="oldest" <?php echo $sort_order === 'oldest' ? 'selected' : ''; ?>>Oldest</option>
                 </select>
-                <!-- ตัวกรองปี -->
+                <!-- ตัวกรองปี (Dynamic) -->
                 <select id="Year" name="Year" onchange="this.form.submit()">
                     <option value="">Year</option>
                     <?php
-                    $years = ['2025', '2024', '2023', '2022', '2021']; // แก้ไขตามปีที่มีในฐานข้อมูล
                     foreach ($years as $year) {
                         $selected = ($year_filter == $year) ? 'selected' : '';
                         echo "<option value=\"$year\" $selected>$year</option>";
@@ -160,8 +157,7 @@ $end_result = min($start_from + $messages_per_page, $total_records);
                     }
                     ?>
                 </select>
-                <button onclick="exportSelectedChats()">📥 Export Selected to CSV</button>
-                <!-- ซ่อน input สำหรับ pagination เพื่อคงค่า -->
+                <button type="button" onclick="exportSelectedChats()">📥 Export Selected to CSV</button>
                 <input type="hidden" name="page" value="<?php echo $page; ?>">
                 <input type="hidden" name="results_per_page" value="<?php echo $messages_per_page; ?>">
             </div>
@@ -177,7 +173,6 @@ $end_result = min($start_from + $messages_per_page, $total_records);
             </thead>
             <tbody id="chatTable">
                 <?php
-                // แสดงข้อมูลในตาราง ถ้ามีผลลัพธ์
                 if (mysqli_num_rows($result) > 0) {
                     while ($row = mysqli_fetch_assoc($result)) {
                         echo "<tr data-timestamp='" . htmlspecialchars($row['latest_timestamp']) . "'>";
@@ -196,14 +191,12 @@ $end_result = min($start_from + $messages_per_page, $total_records);
 
         <?php if ($total_pages > 1): ?>
             <div class="pagination">
-                <!-- ปุ่มย้อนกลับ รวม sort_order และตัวกรองในลิงก์ -->
                 <?php if ($page > 1): ?>
                     <a href="?page=<?php echo $page - 1; ?>&results_per_page=<?php echo $messages_per_page; ?>&sort_order=<?php echo $sort_order; ?>&Year=<?php echo $year_filter; ?>&department=<?php echo $department_filter; ?>" class="pagination-arrow">«</a>
                 <?php else: ?>
                     <a href="#" class="pagination-arrow disabled">«</a>
                 <?php endif; ?>
 
-                <!-- เลขหน้า รวม sort_order และตัวกรองในลิงก์ -->
                 <?php for ($i = 1; $i <= $total_pages; $i++): ?>
                     <a href="?page=<?php echo $i; ?>&results_per_page=<?php echo $messages_per_page; ?>&sort_order=<?php echo $sort_order; ?>&Year=<?php echo $year_filter; ?>&department=<?php echo $department_filter; ?>"
                         class="<?php echo $i == $page ? 'active' : ''; ?>"
@@ -212,7 +205,6 @@ $end_result = min($start_from + $messages_per_page, $total_records);
                     </a>
                 <?php endfor; ?>
 
-                <!-- ปุ่มถัดไป รวม sort_order และตัวกรองในลิงก์ -->
                 <?php if ($page < $total_pages): ?>
                     <a href="?page=<?php echo $page + 1; ?>&results_per_page=<?php echo $messages_per_page; ?>&sort_order=<?php echo $sort_order; ?>&Year=<?php echo $year_filter; ?>&department=<?php echo $department_filter; ?>" class="pagination-arrow">»</a>
                 <?php else: ?>
@@ -224,7 +216,6 @@ $end_result = min($start_from + $messages_per_page, $total_records);
         <?php if ($total_records > 0): ?>
             <div class="results-info">
                 Results: <?php echo "$start_result - $end_result of $total_records messages"; ?>
-                <!-- Dropdown จำนวนผลลัพธ์ต่อหน้า -->
                 <select class="results-per-page" onchange="changeResultsPerPage(this.value)">
                     <option value="20" <?php echo $messages_per_page == 20 ? 'selected' : ''; ?>>20</option>
                     <option value="50" <?php echo $messages_per_page == 50 ? 'selected' : ''; ?>>50</option>
@@ -240,7 +231,6 @@ $end_result = min($start_from + $messages_per_page, $total_records);
             window.location.href = `?page=1&results_per_page=${perPage}&sort_order=<?php echo $sort_order; ?>&Year=<?php echo $year_filter; ?>&department=<?php echo $department_filter; ?>`;
         }
 
-        // JavaScript เดิมสำหรับการกรองและเรียงลำดับในตาราง
         const tbody = document.getElementById('chatTable');
         let originalRows = Array.from(tbody.getElementsByTagName('tr'));
 
@@ -296,10 +286,7 @@ $end_result = min($start_from + $messages_per_page, $total_records);
                 if (checkbox.checked) {
                     const studentId = checkbox.getAttribute('data-student-id');
                     const advisorId = checkbox.getAttribute('data-advisor-id');
-                    selectedPairs.push({
-                        student_id: studentId,
-                        advisor_id: advisorId
-                    });
+                    selectedPairs.push({ student_id: studentId, advisor_id: advisorId });
                 }
             }
 
@@ -308,19 +295,38 @@ $end_result = min($start_from + $messages_per_page, $total_records);
                 return;
             }
 
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = 'export_chat.php';
-            form.style.display = 'none';
+            // สร้าง URL-encoded form data
+            const formData = new URLSearchParams();
+            formData.append('selected_pairs', JSON.stringify(selectedPairs));
 
-            const pairsInput = document.createElement('input');
-            pairsInput.type = 'hidden';
-            pairsInput.name = 'selected_pairs';
-            pairsInput.value = JSON.stringify(selectedPairs);
-            form.appendChild(pairsInput);
-
-            document.body.appendChild(form);
-            form.submit();
+            // ส่งข้อมูลไปยัง export_chat.php ด้วย fetch
+            fetch('export_chat.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'chat_export.csv';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => {
+                console.error('Error exporting chats:', error);
+                alert('Failed to export chats. Please try again.');
+            });
         }
 
         window.onload = function() {
