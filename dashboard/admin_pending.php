@@ -27,8 +27,7 @@ if (isset($_POST['profile'])) {
 
 // ดึงค่าจาก GET
 $selected_year = isset($_GET['academic_year']) ? $_GET['academic_year'] : '';
-$search_student_id = isset($_GET['search_student_
-id']) ? trim($_GET['search_student_id']) : '';
+$search_student_id = isset($_GET['search_student_id']) ? trim($_GET['search_student_id']) : '';
 $search_student_name = isset($_GET['search_student_name']) ? trim($_GET['search_student_name']) : '';
 $search_thesis_topic = isset($_GET['search_thesis_topic']) ? trim($_GET['search_thesis_topic']) : '';
 
@@ -228,15 +227,13 @@ $result = $conn->query($sql);
                         $advisor_full_name = $row['advisor_full_name'] ?? 'ไม่พบชื่ออาจารย์';
 
                         echo "<tr>
-                                <td>{$row['advisor_request_id'
-]}</td>
+                                <td>{$row['advisor_request_id']}</td>
 
                                 <td>$student_id_display</td>
                                 <td>$student_full_name</td>
                                 <td>{$row['advisor_id']}</td>
                                 <td>$advisor_full_name</td>
-                                <td>{$row['thesis_topic_thai']
-}</td>
+                                <td>{$row['thesis_topic_thai']}</td>
                                 <td>{$row['thesis_topic_eng']}</td>
                                 <td>{$row['academic_year']}</td>
 
