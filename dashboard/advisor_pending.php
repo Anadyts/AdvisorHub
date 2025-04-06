@@ -199,8 +199,7 @@ $result = $conn->query($sql);
                 <?php
                 if ($result->num_rows > 0) {
                     while ($row = $result->fetch_assoc()) {
-                        $date = date('d/m/Y', strtotime($row['time_stamp']))
-;
+                        $date = date('d/m/Y', strtotime($row['time_stamp']));
                         $student_ids = json_decode($row['student_id'], true);
 
                         $student_names = [];
@@ -220,15 +219,13 @@ $result = $conn->query($sql);
                         $advisor_full_name = $row['advisor_full_name'] ?? 'ไม่พบชื่ออาจารย์';
 
                         echo "<tr>
-                                <td>{$row['advisor_request_id'
-]}</td>
+                                <td>{$row['advisor_request_id']}</td>
 
                                 <td>{$row['student_id']}</td>
                                 <td>{$student_full_name}</td>
                                 <td>{$row['advisor_id']}</td>
                                 <td>{$advisor_full_name}</td>
-                                <td>{$row['thesis_topic_thai']
-}</td>
+                                <td>{$row['thesis_topic_thai']}</td>
                                 <td>{$row['thesis_topic_eng']}</td>
                                 <td>{$row['academic_year']}</td>
 
@@ -236,8 +233,7 @@ $result = $conn->query($sql);
                               </tr>";
                     }
                 } else {
-                    echo "<tr><td colspan='9' class='no-data'>ไม่มีคำขอที่
-รอดำเนินการจาก Advisor</td></tr>";
+                    echo "<tr><td colspan='9' class='no-data'>ไม่มีคำขอที่รอดำเนินการจาก Advisor</td></tr>";
 
                 }
                 ?>
