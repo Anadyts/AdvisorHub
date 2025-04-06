@@ -24,8 +24,14 @@ if (isset($_POST['profile'])) {
     exit();
 }
 
-// ดึงค่าปีการศึกษาจาก GET
-$selected_year = isset($_GET['academic_year']) ? $_GET['academic_year'] : null;
+// ดึงค่าจาก GET
+$selected_year = isset($_GET['academic_year']) ? $_GET['academic_year'] : '';
+$search_student_id = isset($_GET['search_student_id']) ? trim($_GET['search_student_id']) : '';
+$search_student_name = isset($_GET['search_student_name']) ? trim($_GET['search_student_name']) : '';
+$search_thesis_topic = isset($_GET['search_thesis_topic']) ? trim($_GET['search_thesis_topic']) : '';
+$selected_advisors = isset($_GET['advisors']) && is_array($_GET['advisors']) ? $_GET['advisors'] : [];
+$selected_is_even = isset($_GET['is_even']) && is_array($_GET['is_even']) ? $_GET['is_even'] : [];
+$selected_departments = isset($_GET['departments']) && is_array($_GET['departments']) ? $_GET['departments'] : [];
 
 // ดึงปีการศึกษาที่มีอยู่ทั้งหมดจากฐานข้อมูล
 $yearQuery = "SELECT DISTINCT academic_year FROM advisor_request ORDER BY academic_year DESC";
@@ -51,8 +57,38 @@ $sql = "SELECT
         LEFT JOIN advisor a ON ar.advisor_id = a.advisor_id
         WHERE (ar.partner_accepted = 1 AND ar.is_admin_approved = 1 AND ar.is_advisor_approved = 1)";
 
-if ($selected_year != null) {
+// เพิ่มเงื่อนไขการกรอง
+if (!empty($selected_year)) {
     $sql .= " AND ar.academic_year = '" . $conn->real_escape_string($selected_year) . "'";
+}
+if (!empty($search_student_id)) {
+    $sql .= " AND JSON_CONTAINS(ar.student_id, '\"$search_student_id\"')";
+}
+if (!empty($search_student_name)) {
+    $sql .= " AND EXISTS (
+        SELECT 1 FROM student s 
+        WHERE JSON_CONTAINS(ar.student_id, CONCAT('\"', s.student_id, '\"'))
+        AND CONCAT(s.student_first_name, ' ', s.student_last_name) LIKE '%$search_student_name%'
+    )";
+}
+if (!empty($search_thesis_topic)) {
+    $sql .= " AND (ar.thesis_topic_thai LIKE '%$search_thesis_topic%' OR ar.thesis_topic_eng LIKE '%$search_thesis_topic%')";
+}
+if (!empty($selected_advisors)) {
+    $advisor_list = "'" . implode("','", array_map([$conn, 'real_escape_string'], $selected_advisors)) . "'";
+    $sql .= " AND CONCAT(a.advisor_first_name, ' ', a.advisor_last_name) IN ($advisor_list)";
+}
+if (!empty($selected_is_even)) {
+    $is_even_list = implode(',', array_map('intval', $selected_is_even));
+    $sql .= " AND ar.is_even IN ($is_even_list)";
+}
+if (!empty($selected_departments)) {
+    $dept_list = "'" . implode("','", array_map([$conn, 'real_escape_string'], $selected_departments)) . "'";
+    $sql .= " AND EXISTS (
+        SELECT 1 FROM student s 
+        WHERE JSON_CONTAINS(ar.student_id, CONCAT('\"', s.student_id, '\"'))
+        AND s.student_department IN ($dept_list)
+    )";
 }
 
 $sql .= " ORDER BY ar.academic_year DESC";
@@ -69,103 +105,11 @@ $result = $conn->query($sql);
     <link rel="icon" href="../Logo.png">
     <link rel="stylesheet" href="style/accepted_request.css">
     <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;700&display=swap" rel="stylesheet">
 </head>
 
 <style>
-    .advisor-filter-container {
-        max-width: 1000px;
-        margin: 0 auto 40px auto;
-        padding: 30px;
-        background: #fff;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        border-radius: 8px;
-    }
 
-    .advisor-filter-container h6 {
-        font-size: 18px;
-        font-weight: bold;
-        color: #410690;
-        margin: 0 0 15px 0;
-        text-align: left;
-    }
-
-    .advisor-filter-container .ts-wrapper {
-        position: relative;
-    }
-
-    .advisor-filter-container .ts-wrapper .ts-control {
-        border: 2px solid #999 !important;
-        border-radius: 8px;
-        padding: 10px;
-        background-color: #fff;
-        font-size: 16px;
-        min-height: 40px;
-        transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    }
-
-    .advisor-filter-container .ts-control:not(:empty) {
-        border-color: #410690 !important;
-    }
-
-    .advisor-filter-container .ts-control:focus-within {
-        border-color: #6a11cb !important;
-        box-shadow: 0 0 8px rgba(106, 17, 203, 0.3);
-    }
-
-    .advisor-filter-container select {
-        border: 2px solid #999 !important;
-        border-radius: 8px;
-        padding: 10px;
-        background-color: #fff;
-        font-size: 16px;
-        min-height: 40px;
-    }
-
-    .advisor-filter-container .ts-control input {
-        border: none !important;
-        outline: none;
-        background: transparent;
-        color: #666;
-    }
-
-    .advisor-filter-container .item {
-        background-color: #410690;
-        color: #fff;
-        border-radius: 4px;
-        padding: 4px 8px;
-        margin: 2px;
-        display: inline-flex;
-        align-items: center;
-    }
-
-    .advisor-filter-container .item .remove {
-        margin-left: 6px;
-        cursor: pointer;
-        color: #fff;
-        font-weight: bold;
-        font-size: 12px;
-    }
-
-    .advisor-filter-container .ts-dropdown {
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        background-color: #fff;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        max-height: 200px;
-        overflow-y: auto;
-    }
-
-    .advisor-filter-container .option {
-        padding: 10px 15px;
-        font-size: 16px;
-        color: #333;
-        cursor: pointer;
-    }
-
-    .advisor-filter-container .option:hover,
-    .advisor-filter-container .option.active {
-        background-color: #f1f1f1;
-    }
 </style>
 
 <body>
@@ -173,48 +117,66 @@ $result = $conn->query($sql);
 
     <h2 class="header">รายละเอียดคำขอจากนิสิตที่อนุมัติ</h2>
 
-    <!-- ฟอร์มเลือกปีการศึกษา -->
-    <div class="filter-container">
-        <form method="GET" class="filter-form">
-            <label for="academic_year">ปีการศึกษา:</label>
-            <select name="academic_year" id="academic_year" onchange="this.form.submit()">
-                <option value="">ทั้งหมด</option>
-                <?php
-                while ($row = $yearResult->fetch_assoc()) {
-                    $year = $row['academic_year'];
-                    $selected = ($year == $selected_year) ? 'selected' : '';
-                    echo "<option value='$year' $selected>$year</option>";
-                }
-                ?>
-            </select>
+    <!-- การ์ดกรองทั้งหมด -->
+    <div class="filter-card">
+        <h3>ค้นหาและกรองข้อมูลคำร้องขอที่อนุมัติ</h3>
+        <form method="GET" action="" id="filterForm">
+            <div class="form-row">
+                <label>
+                    ปีการศึกษา:
+                    <select name="academic_year" id="academic_year">
+                        <option value="">ทั้งหมด</option>
+                        <?php while ($row = $yearResult->fetch_assoc()): ?>
+                            <option value="<?= $row['academic_year'] ?>" <?= $row['academic_year'] == $selected_year ? 'selected' : '' ?>>
+                                <?= $row['academic_year'] ?>
+                            </option>
+                        <?php endwhile; ?>
+                    </select>
+                </label>
+            </div>
+
+            <div class="form-actions">
+                <input type="text" name="search_student_id" placeholder="ค้นหาด้วยรหัสนิสิต" value="<?= htmlspecialchars($search_student_id) ?>">
+                <input type="text" name="search_student_name" placeholder="ค้นหาด้วยชื่อ-นามสกุลนิสิต" value="<?= htmlspecialchars($search_student_name) ?>">
+                <input type="text" name="search_thesis_topic" placeholder="ค้นหาด้วยหัวข้อวิทยานิพนธ์" value="<?= htmlspecialchars($search_thesis_topic) ?>">
+                <button type="submit">ค้นหา</button>
+            </div>
+
+            <h6>ตัวกรองเพิ่มเติม</h6>
+            <div class="filter-row">
+                <div class="filter-item">
+                    <label>กรองชื่ออาจารย์</label>
+                    <select name="advisors[]" id="select-advisors" multiple data-placeholder="กรองชื่ออาจารย์">
+                        <optgroup label="Advisor">
+                            <?php
+                            $advisorResult->data_seek(0); // รีเซ็ต pointer
+                            while ($row = $advisorResult->fetch_assoc()) {
+                                $advisor_name = htmlspecialchars($row['advisor_full_name'], ENT_QUOTES, 'UTF-8');
+                                $selected = in_array($advisor_name, $selected_advisors) ? 'selected' : '';
+                                echo "<option value='$advisor_name' $selected>$advisor_name</option>";
+                            }
+                            ?>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div class="filter-item">
+                    <label>กรองประเภทการทำ</label>
+                    <select name="is_even[]" id="select-is-even" multiple data-placeholder="เลือกประเภท (เดี่ยว/คู่)">
+                        <option value="0" <?= in_array('0', $selected_is_even) ? 'selected' : '' ?>>เดี่ยว</option>
+                        <option value="1" <?= in_array('1', $selected_is_even) ? 'selected' : '' ?>>คู่</option>
+                    </select>
+                </div>
+
+                <div class="filter-item">
+                    <label>กรองสาขา</label>
+                    <select name="departments[]" id="select-department" multiple data-placeholder="เลือกสาขา">
+                        <option value="Information Technology" <?= in_array('Information Technology', $selected_departments) ? 'selected' : '' ?>>Information Technology</option>
+                        <option value="Computer Science" <?= in_array('Computer Science', $selected_departments) ? 'selected' : '' ?>>Computer Science</option>
+                    </select>
+                </div>
+            </div>
         </form>
-    </div>
-
-    <!-- ตัวกรองชื่ออาจารย์, ประเภทการทำ, และสาขา -->
-    <div class="advisor-filter-container">
-        <h6>กรองชื่ออาจารย์</h6>
-        <select id="select-advisors" multiple data-placeholder="กรองชื่ออาจารย์" class="form-control">
-            <optgroup label="Advisor">
-                <?php
-                while ($row = $advisorResult->fetch_assoc()) {
-                    $advisor_name = htmlspecialchars($row['advisor_full_name'], ENT_QUOTES, 'UTF-8');
-                    echo "<option value='$advisor_name'>$advisor_name</option>";
-                }
-                ?>
-            </optgroup>
-        </select>
-
-        <h6 style="margin-top: 20px;">กรองประเภทการทำ</h6>
-        <select id="select-is-even" multiple data-placeholder="เลือกประเภท (เดี่ยว/คู่)" class="form-control">
-            <option value="0">เดี่ยว</option>
-            <option value="1">คู่</option>
-        </select>
-
-        <h6 style="margin-top: 20px;">กรองสาขา</h6>
-        <select id="select-department" multiple data-placeholder="เลือกสาขา" class="form-control">
-            <option value="Information Technology">Information Technology</option>
-            <option value="Computer Science">Computer Science</option>
-        </select>
     </div>
 
     <div class="table-container">
@@ -276,55 +238,33 @@ $result = $conn->query($sql);
 
     <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
     <script>
-        // ตัวกรองชื่ออาจารย์
         const advisorSelect = new TomSelect("#select-advisors", {
             plugins: ['remove_button'],
             create: false,
+            onChange: function() {
+                document.getElementById('filterForm').submit();
+            }
         });
 
-        // ตัวกรองประเภทการทำ (เดี่ยว/คู่)
         const isEvenSelect = new TomSelect("#select-is-even", {
             plugins: ['remove_button'],
             create: false,
+            onChange: function() {
+                document.getElementById('filterForm').submit();
+            }
         });
 
-        // ตัวกรองสาขา
         const departmentSelect = new TomSelect("#select-department", {
             plugins: ['remove_button'],
             create: false,
+            onChange: function() {
+                document.getElementById('filterForm').submit();
+            }
         });
 
-        // ฟังก์ชันกรองเมื่อมีการเปลี่ยนแปลงในตัวกรองใดตัวกรองหนึ่ง
-        function filterTable() {
-            const advisors = advisorSelect.items;
-            const isEven = isEvenSelect.items;
-            const departments = departmentSelect.items;
-
-            console.log("Selected Advisors:", advisors);
-            console.log("Selected is_even:", isEven);
-            console.log("Selected Departments:", departments);
-
-            fetch('filter_advisor.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: 'advisors=' + encodeURIComponent(JSON.stringify(advisors)) +
-                        '&academic_year=' + encodeURIComponent('<?php echo $selected_year ?? ''; ?>') +
-                        '&is_even=' + encodeURIComponent(JSON.stringify(isEven)) +
-                        '&departments=' + encodeURIComponent(JSON.stringify(departments))
-                })
-                .then(response => response.text())
-                .then(data => {
-                    console.log("Filter Response:", data);
-                    document.getElementById('requestTableBody').innerHTML = data;
-                });
-        }
-
-        // เรียกฟังก์ชันเมื่อมีการเปลี่ยนแปลงในตัวกรอง
-        advisorSelect.on('change', filterTable);
-        isEvenSelect.on('change', filterTable);
-        departmentSelect.on('change', filterTable);
+        document.getElementById('academic_year').addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
+        });
     </script>
 </body>
 
