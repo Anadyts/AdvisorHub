@@ -59,7 +59,7 @@ $sql = "SELECT
             ar.is_even
         FROM advisor_request ar
         LEFT JOIN advisor a ON ar.advisor_id = a.advisor_id
-        WHERE ar.is_admin_approved = 0 AND ar.partner_accepted != 2 AND ar.is_advisor_approved != 2";
+        WHERE ar.is_admin_approved = 0 AND ar.partner_accepted = 1 AND ar.is_advisor_approved != 2";
 
 // เพิ่มเงื่อนไขการกรอง
 if (!empty($selected_year)) {
