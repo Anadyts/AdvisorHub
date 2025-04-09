@@ -129,7 +129,7 @@ $end_result = min($start_from + $messages_per_page, $total_records);
     }
     ?>
     <div class="container">
-        <h1>Admin Chat Management</h1>
+        <h1>Chat Management</h1>
         <form method="GET" action="">
             <div class="search-filter">
                 <input type="text" id="searchInput" placeholder="🔍 Search by user..." onkeyup="filterTable()">
