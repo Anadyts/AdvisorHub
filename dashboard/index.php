@@ -89,7 +89,7 @@ if (isset($_POST['profile'])) {
         <!-- Admin Card -->
         <a href="/AdvisorHub/dashboard/admin_pending.php">
             <div class="card">
-                <div class="card-header admin">คำขอที่รอ Admin อนุมัติ</div>
+                <div class="card-header admin">คำขอที่รอ Executive อนุมัติ</div>
                 <div class="card-body">
                     <div class="card-number">
                         <?php
